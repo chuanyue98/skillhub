@@ -8,6 +8,9 @@ out/
 # sync 产生的本地数据库（skills.json 快照需要提交，db 不需要）
 data/*.db
 
+# vercel
+.vercel/
+
 # misc
 *.tsbuildinfo
 .DS_Store
