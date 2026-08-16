@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { incrementCopyCount } from "@/lib/counts";
 
 export default function InstallCommand({
   command,
   compact,
+  skillId,
 }: {
   command: string;
   compact?: boolean;
+  /** 技能 id，复制成功后上报安装计数 */
+  skillId?: string;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -15,6 +19,7 @@ export default function InstallCommand({
     try {
       await navigator.clipboard.writeText(command);
       setCopied(true);
+      if (skillId) void incrementCopyCount(skillId);
       setTimeout(() => setCopied(false), 1500);
     } catch {
       // 剪贴板不可用时静默失败

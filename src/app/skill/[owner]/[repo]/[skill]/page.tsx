@@ -5,6 +5,7 @@ import Link from "next/link";
 import { loadSkills } from "@/lib/skills";
 import InstallCommand from "@/components/InstallCommand";
 import ScoreBadge from "@/components/ScoreBadge";
+import CopyCount from "@/components/CopyCount";
 import type { ScoreLevel, SkillScore } from "@/lib/types";
 
 export const dynamic = "force-static";
@@ -76,7 +77,8 @@ export default async function SkillDetailPage({
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ink-3">
               Install
             </span>
-            <InstallCommand command={install} />
+            <InstallCommand command={install} skillId={found.id} />
+            <CopyCount skillId={found.id} />
           </div>
 
           {/* 规格表 */}

@@ -4,13 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { SkillSnapshot } from "@/lib/types";
+import { fetchCopyCounts } from "@/lib/counts";
 import InstallCommand from "./InstallCommand";
 import ScoreBadge from "./ScoreBadge";
 
-type SortKey = "score" | "stars";
+type SortKey = "score" | "stars" | "copies";
 
 const SORT_OPTIONS: [SortKey, string][] = [
   ["score", "评分"],
+  ["copies", "热度"],
   ["stars", "星数"],
 ];
 
@@ -25,12 +27,20 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortKey>("score");
   const [page, setPage] = useState(1);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+
+  // 拉取全量复制计数（供热度排序）
+  useEffect(() => {
+    fetchCopyCounts().then(setCounts);
+  }, []);
 
   // URL 参数 → 状态：首屏读分享链接，之后响应前进/后退
   useEffect(() => {
     const q = searchParams.get("q") ?? "";
     const tag = searchParams.get("tag") ?? null;
-    const s: SortKey = searchParams.get("sort") === "stars" ? "stars" : "score";
+    const sortParam = searchParams.get("sort");
+    const s: SortKey =
+      sortParam === "stars" || sortParam === "copies" ? sortParam : "score";
     const p = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
     setQuery((prev) => (prev === q ? prev : q));
     setActiveTag((prev) => (prev === tag ? prev : tag));
@@ -80,12 +90,19 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
         s.tags.some((t) => t.toLowerCase().includes(q))
       );
     });
-    return [...matched].sort((a, b) =>
-      sortBy === "score"
-        ? b.score.total - a.score.total || b.repo.stars - a.repo.stars
-        : b.repo.stars - a.repo.stars || b.score.total - a.score.total
-    );
-  }, [skills, query, activeTag, sortBy]);
+    return [...matched].sort((a, b) => {
+      if (sortBy === "copies") {
+        return (
+          (counts[b.id] ?? 0) - (counts[a.id] ?? 0) ||
+          b.score.total - a.score.total
+        );
+      }
+      if (sortBy === "stars") {
+        return b.repo.stars - a.repo.stars || b.score.total - a.score.total;
+      }
+      return b.score.total - a.score.total || b.repo.stars - a.repo.stars;
+    });
+  }, [skills, query, activeTag, sortBy, counts]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -259,7 +276,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {pageSkills.map((s) => (
-              <SkillCard key={s.id} skill={s} />
+              <SkillCard key={s.id} skill={s} count={counts[s.id] ?? 0} />
             ))}
           </div>
         )}
@@ -293,7 +310,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
   );
 }
 
-function SkillCard({ skill }: { skill: SkillSnapshot }) {
+function SkillCard({ skill, count }: { skill: SkillSnapshot; count: number }) {
   const href = `/skill/${skill.repo.fullName}/${skill.name}`;
   return (
     <article className="group flex flex-col gap-3 rounded-xl border border-hairline bg-surface p-4 transition hover:-translate-y-0.5 hover:border-signal/40 hover:shadow-[0_6px_24px_rgba(14,122,74,0.08)] [content-visibility:auto] [contain-intrinsic-size:auto_190px]">
@@ -339,7 +356,17 @@ function SkillCard({ skill }: { skill: SkillSnapshot }) {
         <span translate="no" className="truncate font-mono text-[10px] text-ink-3">
           {skill.repo.fullName}
         </span>
-        <InstallCommand command={skill.install} compact />
+        <span className="flex shrink-0 items-center gap-1.5">
+          {count > 0 && (
+            <span
+              title="被复制安装次数"
+              className="font-mono text-[10px] text-ink-3"
+            >
+              ⧉ {count.toLocaleString()}
+            </span>
+          )}
+          <InstallCommand command={skill.install} compact skillId={skill.id} />
+        </span>
       </div>
     </article>
   );
