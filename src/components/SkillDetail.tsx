@@ -81,11 +81,11 @@ export default function SkillDetail({ skill }: { skill: SkillSnapshot }) {
           {/* 规格表 */}
           <dl className="flex flex-col gap-px overflow-hidden rounded-xl border border-hairline bg-hairline">
             {specs.map(({ label, value, href }) => (
-              <div key={label} className="flex flex-col gap-0.5 bg-surface px-4 py-3">
+              <div key={label} className="flex min-w-0 flex-col gap-0.5 bg-surface px-3.5 py-2.5">
                 <dt className="font-mono text-[10px] font-bold uppercase tracking-widest text-ink-3">
                   {label}
                 </dt>
-                <dd translate="no" className="break-all font-mono text-xs text-ink-2">
+                <dd translate="no" className="min-w-0 break-words font-mono text-xs leading-snug text-ink-2">
                   {href ? (
                     <a
                       href={href}
@@ -105,6 +105,7 @@ export default function SkillDetail({ skill }: { skill: SkillSnapshot }) {
           </dl>
 
           <ScorePanel score={score} />
+
 
           {tags.length > 0 && (
             <div className="flex flex-col gap-2">
@@ -163,25 +164,36 @@ const BAR_COLORS: Record<ScoreLevel, string> = {
   D: "bg-zinc-400",
 };
 
-/** 质量评分面板：总分 + 各维度得分明细（标签按语言切换） */
+/** 质量评分面板：总分 + 可展开的维度明细（默认折叠，避免侧栏超高一屏） */
 function ScorePanel({ score }: { score: SkillScore }) {
   const { t } = useLang();
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-hairline bg-surface px-4 py-4">
-      <div className="flex items-center gap-3">
+    <details className="group flex flex-col gap-3 rounded-xl border border-hairline bg-surface px-4 py-3.5">
+      <summary className="flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden">
         <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-ink-3">
           {t("detail.score")}
         </span>
-        <span className="font-mono text-2xl font-black text-ink">
+        <span className="font-mono text-xl font-black leading-none text-ink">
           {score.total}
-          <span className="text-sm font-semibold text-ink-3">/100</span>
+          <span className="text-xs font-semibold text-ink-3">/100</span>
         </span>
         <ScoreBadge score={score} />
-      </div>
-      <div className="flex flex-col gap-2">
+        <svg
+          viewBox="0 0 12 12"
+          className="ml-auto h-3 w-3 text-ink-3 transition-transform group-open:rotate-180"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          <path d="M2.5 4.5 6 8l3.5-3.5" />
+        </svg>
+      </summary>
+      <div className="flex flex-col gap-1.5 pt-2">
         {score.items.map((item) => (
-          <div key={item.label} className="flex items-center gap-3 text-xs">
-            <span className="w-20 shrink-0 text-ink-2">
+          <div key={item.label} className="flex items-center gap-2.5 text-[11px]">
+            <span className="w-[4.5rem] shrink-0 truncate text-ink-2">
               {t(SCORE_LABEL_KEYS[item.label] ?? item.label)}
             </span>
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-hairline">
@@ -192,12 +204,12 @@ function ScorePanel({ score }: { score: SkillScore }) {
                 }}
               />
             </div>
-            <span className="w-12 shrink-0 text-right font-mono text-ink-3">
+            <span className="w-11 shrink-0 text-right font-mono text-ink-3">
               {item.points}/{item.max}
             </span>
           </div>
         ))}
       </div>
-    </div>
+    </details>
   );
 }
