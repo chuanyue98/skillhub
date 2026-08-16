@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { SkillSnapshot } from "@/lib/types";
 import ScoreBadge from "./ScoreBadge";
 import OfficialBadge from "./OfficialBadge";
+import { useLang } from "./LangProvider";
 
 const TOP_N = 6;
 
@@ -15,6 +16,7 @@ export default function TrendingSection({
   skills: SkillSnapshot[];
 }) {
   const [trending, setTrending] = useState<Record<string, number>>({});
+  const { t } = useLang();
 
   useEffect(() => {
     fetch("/api/trending", { cache: "no-store" })
@@ -36,11 +38,11 @@ export default function TrendingSection({
     <section className="flex flex-col gap-3" aria-label="本周热榜">
       <div className="flex items-center gap-2">
         <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-signal">
-          🔥 本周热榜
+          {t("trending.title")}
         </span>
         <span className="h-px flex-1 bg-hairline" aria-hidden="true" />
         <span className="font-mono text-[10px] text-ink-3">
-          近 7 天复制次数
+          {t("trending.sub")}
         </span>
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -67,7 +69,7 @@ export default function TrendingSection({
               {skill.name}
             </span>
             <span className="font-mono text-[10px] text-ink-3">
-              ⧉ {count.toLocaleString()} 次
+              ⧉ {count.toLocaleString()} {t("trending.times")}
             </span>
           </Link>
         ))}

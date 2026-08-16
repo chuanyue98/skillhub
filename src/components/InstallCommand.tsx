@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { incrementCopyCount } from "@/lib/counts";
+import { useLang } from "./LangProvider";
 
 export default function InstallCommand({
   command,
@@ -14,6 +15,7 @@ export default function InstallCommand({
   skillId?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useLang();
 
   const copy = async () => {
     try {
@@ -30,15 +32,15 @@ export default function InstallCommand({
     return (
       <button
         onClick={copy}
-        title={`复制：${command}`}
-        aria-label={`复制安装命令：${command}`}
+        title={`${t("copy.tooltip")}${command}`}
+        aria-label={`${t("copy.tooltip")}${command}`}
         className={`shrink-0 rounded-md border px-2 py-1 text-[11px] font-semibold transition ${
           copied
             ? "border-signal/40 bg-signal-soft text-signal"
             : "border-hairline bg-surface text-ink-2 hover:border-signal/50 hover:text-signal"
         }`}
       >
-        {copied ? "✓ 已复制" : "复制"}
+        {copied ? t("copy.copied") : t("copy.copy")}
       </button>
     );
   }
@@ -56,14 +58,14 @@ export default function InstallCommand({
       </code>
       <button
         onClick={copy}
-        aria-label={`复制安装命令：${command}`}
+        aria-label={`${t("copy.tooltip")}${command}`}
         className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-semibold transition ${
           copied
             ? "bg-signal-soft text-signal"
             : "bg-signal text-white hover:bg-signal-bright"
         }`}
       >
-        {copied ? "✓ 已复制" : "复制"}
+        {copied ? t("copy.copied") : t("copy.copy")}
       </button>
     </div>
   );

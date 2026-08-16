@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo, JetBrains_Mono } from "next/font/google";
+import { LangProvider } from "@/components/LangProvider";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -34,7 +35,7 @@ export default function RootLayout({
       <body
         className={`${archivo.variable} ${jetbrains.variable} min-h-screen bg-paper font-sans text-ink antialiased`}
       >
-        {children}
+        <LangProvider>{children}</LangProvider>
       </body>
     </html>
   );

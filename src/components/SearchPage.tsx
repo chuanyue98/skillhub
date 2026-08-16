@@ -7,13 +7,15 @@ import type { SkillSnapshot } from "@/lib/types";
 import { fetchCopyCounts } from "@/lib/counts";
 import TrendingSection from "./TrendingSection";
 import SkillCard from "./SkillCard";
+import { useLang } from "./LangProvider";
+import LangToggle from "./LangToggle";
 
 type SortKey = "score" | "stars" | "copies";
 
 const SORT_OPTIONS: [SortKey, string][] = [
-  ["score", "评分"],
-  ["copies", "热度"],
-  ["stars", "星数"],
+  ["score", "sort.score"],
+  ["copies", "sort.copies"],
+  ["stars", "sort.stars"],
 ];
 
 /** 每页展示的技能数（4 列 × 6 行） */
@@ -22,6 +24,7 @@ const PAGE_SIZE = 24;
 export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLang();
 
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -139,7 +142,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
             href="/browse"
             className="rounded-full border border-hairline bg-surface px-2.5 py-1 transition hover:border-signal/50 hover:text-signal"
           >
-            分类浏览
+            {t("header.browse")}
           </Link>
           <span className="rounded-full border border-hairline bg-surface px-2.5 py-1">
             {skills.length} SKILLS
@@ -147,6 +150,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
           <span className="hidden rounded-full border border-hairline bg-surface px-2.5 py-1 sm:block">
             {repoCount} REPOS
           </span>
+          <LangToggle />
         </div>
       </header>
 
@@ -154,16 +158,15 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
       <section className="flex flex-col gap-7">
         <div className="flex max-w-2xl flex-col gap-4">
           <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-signal">
-            SkillHub · SKILL.md 聚合目录
+            {t("hero.kicker")}
           </p>
           <h1 className="text-balance text-4xl font-black leading-[1.05] tracking-tight text-ink sm:text-5xl">
-            找到技能，
+            {t("hero.title1")}
             <br />
-            复制命令，装上就跑。
+            {t("hero.title2")}
           </h1>
           <p className="text-sm leading-relaxed text-ink-2 sm:text-base">
-            聚合 GitHub 上的开源 Agent Skills（SKILL.md）。搜索、预览，
-            一键装进你的 agent。
+            {t("hero.subtitle")}
           </p>
         </div>
 
@@ -191,7 +194,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
                 setQuery(e.target.value);
                 setPage(1);
               }}
-              placeholder="搜索技能名、描述、标签、仓库…"
+              placeholder={t("search.placeholder")}
               className="w-full rounded-xl border border-hairline-strong bg-surface py-3.5 pl-10 pr-4 text-sm text-ink placeholder-ink-3 outline-none transition focus:border-signal focus:shadow-[0_0_0_3px_rgba(14,122,74,0.12)]"
             />
           </div>
@@ -228,7 +231,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
       <section id="results" className="flex scroll-mt-6 flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <p className="font-mono text-xs text-ink-3">
-            {filtered.length} 个结果
+            {t("results.count", { n: filtered.length })}
             {query.trim() && (
               <>
                 {` · “${query.trim()}”`}
@@ -237,11 +240,8 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
             {activeTag && <> · #{activeTag}</>}
             {totalPages > 1 && (
               <>
-                {" · 第 "}
-                {safePage}
-                {"/"}
-                {totalPages}
-                {" 页"}
+                {" · "}
+                {t("results.page", { page: safePage, total: totalPages })}
               </>
             )}
           </p>
@@ -250,7 +250,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
             role="group"
             aria-label="排序方式"
           >
-            {SORT_OPTIONS.map(([key, label]) => (
+            {SORT_OPTIONS.map(([key, labelKey]) => (
               <button
                 key={key}
                 onClick={() => setSortBy(key)}
@@ -261,7 +261,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
                     : "text-ink-2 hover:text-ink"
                 }`}
               >
-                {label}
+                {t(labelKey)}
               </button>
             ))}
           </div>
@@ -270,16 +270,14 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-hairline-strong bg-surface px-6 py-16 text-center">
             <p className="font-mono text-sm font-bold uppercase tracking-widest text-ink">
-              No match
+              {t("empty.title")}
             </p>
-            <p className="text-sm text-ink-2">
-              没有匹配的技能。换个关键词，或清除筛选再试。
-            </p>
+            <p className="text-sm text-ink-2">{t("empty.desc")}</p>
             <button
               onClick={resetFilters}
               className="rounded-md border border-hairline-strong bg-paper px-3 py-1.5 text-xs font-semibold text-ink-2 transition hover:border-signal hover:text-signal"
             >
-              清除筛选
+              {t("empty.reset")}
             </button>
           </div>
         ) : (
@@ -300,7 +298,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
               disabled={safePage <= 1}
               className="rounded-md border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink-2 transition hover:border-signal/50 hover:text-signal disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-hairline disabled:hover:text-ink-2"
             >
-              ← 上一页
+              {t("pagination.prev")}
             </button>
             <span className="font-mono text-xs text-ink-2">
               {safePage} / {totalPages}
@@ -310,7 +308,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
               disabled={safePage >= totalPages}
               className="rounded-md border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink-2 transition hover:border-signal/50 hover:text-signal disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-hairline disabled:hover:text-ink-2"
             >
-              下一页 →
+              {t("pagination.next")}
             </button>
           </nav>
         )}
