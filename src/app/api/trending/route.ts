@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
-import { kv } from "@vercel/kv";
+import { kv, kvReady } from "@/lib/kv";
 
 /** 近 N 天复制次数聚合，供热榜使用 */
 const TRENDING_DAYS = 7;
-
-function kvReady(): boolean {
-  return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
-}
 
 /** GET /api/trending → { [skillId]: 近7天复制次数 }（仅返回有计数的技能） */
 export async function GET(): Promise<NextResponse> {

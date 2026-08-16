@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { kv } from "@vercel/kv";
-
-/** KV 未配置（本地开发等）时返回空计数，不让站点崩 */
-function kvReady(): boolean {
-  return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
-}
+import { kv, kvReady } from "@/lib/kv";
 
 /** GET /api/counts → { [skillId]: count } */
 export async function GET(): Promise<NextResponse> {
