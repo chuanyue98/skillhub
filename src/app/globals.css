@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+/* ── 设计 token ────────────────────────────────────────────
+   浅色「技术目录」主题：纸面底色 + 深墨文字 + 信号绿强调。
+   显示字体 Archivo（宽体黑字），命令与数据走 JetBrains Mono，
+   中文回退到系统字体。 */
+@theme {
+  --color-paper: #f1f2f0;
+  --color-surface: #fafbfa;
+  --color-ink: #171a20;
+  --color-ink-2: #565f6c;
+  --color-ink-3: #8a93a0;
+  --color-hairline: #d8dcd9;
+  --color-hairline-strong: #c0c6c2;
+  --color-signal: #0e7a4a;
+  --color-signal-bright: #12a05f;
+  --color-signal-soft: #e2efe7;
+  --color-stamp: #b3541e;
+  --color-stamp-soft: #f5e8dd;
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, Consolas,
+    monospace;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 移动端交互：消除双击缩放延迟与点击高亮闪色 */
+button,
+a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: var(--color-signal-soft);
+  color: var(--color-ink);
+}
+
+/* 键盘可达性：显式 focus 环，全部用 signal 绿 */
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 尊重减少动态偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* 命令票根：虚线穿孔 + 左侧竖条，全站签名元素 */
+.ticket {
+  border: 1px dashed var(--color-hairline-strong);
+  border-left: 3px solid var(--color-signal);
+  background: var(--color-surface);
+  border-radius: 0.75rem;
+}
+
+/* ── 技能详情页 Markdown 正文（浅色适配）────────────────── */
+.markdown-body {
+  line-height: 1.8;
+  color: #3a414b;
+  font-size: 0.95rem;
+}
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  color: var(--color-ink);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 1.6em 0 0.6em;
+}
+.markdown-body h1 {
+  font-size: 1.5rem;
+}
+.markdown-body h2 {
+  font-size: 1.25rem;
+  border-bottom: 1px solid var(--color-hairline);
+  padding-bottom: 0.35em;
+}
+.markdown-body h3 {
+  font-size: 1.1rem;
+}
+.markdown-body p {
+  margin: 0.75em 0;
+}
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.5em;
+  margin: 0.75em 0;
+}
+.markdown-body ul {
+  list-style: disc;
+}
+.markdown-body ol {
+  list-style: decimal;
+}
+.markdown-body li {
+  margin: 0.3em 0;
+}
+.markdown-body code {
+  background: #e8ebe7;
+  padding: 0.15em 0.4em;
+  border-radius: 0.375rem;
+  font-size: 0.875em;
+  font-family: var(--font-mono);
+}
+.markdown-body pre {
+  background: #1b1f27;
+  color: #d7dbe2;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+.markdown-body pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 0.85em;
+  color: inherit;
+}
+.markdown-body a {
+  color: var(--color-signal);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown-body a:hover {
+  color: var(--color-signal-bright);
+}
+.markdown-body blockquote {
+  border-left: 3px solid var(--color-hairline-strong);
+  padding-left: 1em;
+  color: var(--color-ink-2);
+  margin: 1em 0;
+}
+.markdown-body table {
+  border-collapse: collapse;
+  margin: 1em 0;
+  width: 100%;
+  font-size: 0.9em;
+}
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--color-hairline);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.markdown-body th {
+  background: #eceee9;
+  font-weight: 700;
+}
+.markdown-body img {
+  max-width: 100%;
+  border-radius: 0.5rem;
+}
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--color-hairline);
+  margin: 1.5em 0;
+}
