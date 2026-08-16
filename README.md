@@ -82,6 +82,8 @@ GITHUB_TOKEN=ghp_xxx npm run sync   # 建议设置，未设置会按 60 次/小�
 
 ## 构建与部署
 
+**线上地址：https://chuanyue98.github.io/skillhub/**（GitHub Pages，推 main 分支自动部署）
+
 ```bash
 npm run build    # 静态导出到 out/
 ```
