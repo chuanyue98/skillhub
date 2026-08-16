@@ -97,8 +97,7 @@ GITHUB_TOKEN=ghp_xxx npm run sync   # 建议设置，未设置会按 60 次/小�
 npm run build    # serverless 构建（含 API 路由）
 ```
 
-- **Vercel**（主站）：连 GitHub 仓库，推 main 自动部署。复制计数依赖 **Vercel Redis（KV）**——Storage 面板创建后连到项目，自动注入 `KV_REST_API_URL` / `KV_REST_API_TOKEN`（`src/lib/kv.ts` 同时兼容 `STORAGE_` 前缀）。
-- **GitHub Pages 镜像**：https://chuanyue98.github.io/skillhub/（仅静态页面，计数/热榜不可用）
+- **Vercel**（唯一主站）：连 GitHub 仓库，推 main 自动部署。复制计数依赖 **Vercel Redis（KV）**——Storage 面板创建后连到项目，自动注入 `KV_REST_API_URL` / `KV_REST_API_TOKEN`（`src/lib/kv.ts` 同时兼容 `STORAGE_` 前缀）。
 - **本地开发**：`vercel env pull .env.local` 拉取真实 KV 凭证后 `npm run dev`，计数功能即可本地联调。
 
 ## 新增数据源
