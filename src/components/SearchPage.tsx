@@ -7,6 +7,7 @@ import type { SkillSnapshot } from "@/lib/types";
 import { fetchCopyCounts } from "@/lib/counts";
 import InstallCommand from "./InstallCommand";
 import ScoreBadge from "./ScoreBadge";
+import TrendingSection from "./TrendingSection";
 
 type SortKey = "score" | "stars" | "copies";
 
@@ -214,6 +215,9 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
           )}
         </div>
       </section>
+
+      {/* 热榜 */}
+      <TrendingSection skills={skills} />
 
       {/* 结果区 */}
       <section id="results" className="flex scroll-mt-6 flex-col gap-3">
