@@ -17,6 +17,8 @@
   --color-signal-soft: #e2efe7;
   --color-stamp: #b3541e;
   --color-stamp-soft: #f5e8dd;
+  --color-official: #2563eb;
+  --color-official-soft: #e8effc;
 
   --font-sans: var(--font-archivo), ui-sans-serif, system-ui, "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;

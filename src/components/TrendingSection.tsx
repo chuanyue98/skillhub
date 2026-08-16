@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { SkillSnapshot } from "@/lib/types";
 import ScoreBadge from "./ScoreBadge";
+import OfficialBadge from "./OfficialBadge";
 
 const TOP_N = 6;
 
@@ -57,7 +58,7 @@ export default function TrendingSection({
               >
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <ScoreBadge score={skill.score} />
+              {skill.official && <OfficialBadge />}
             </div>
             <span
               translate="no"

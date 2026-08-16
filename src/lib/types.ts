@@ -24,6 +24,8 @@ export interface SkillSnapshot {
   /** 一键安装命令：npx skills add owner/repo --skill name */
   install: string;
   repo: RepoMeta;
+  /** 官方来源（如 anthropics/skills、vercel-labs/agent-skills），由 sources.json 标记 */
+  official?: boolean;
   /** 质量评分（0-100），由 sync 脚本计算 */
   score: SkillScore;
 }

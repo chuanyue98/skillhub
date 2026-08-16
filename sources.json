@@ -1,6 +1,6 @@
 [
-  { "repo": "anthropics/skills", "note": "Anthropic 官方技能库" },
-  { "repo": "vercel-labs/agent-skills", "note": "Vercel：React 最佳实践技能" },
+  { "repo": "anthropics/skills", "note": "Anthropic 官方技能库", "official": true },
+  { "repo": "vercel-labs/agent-skills", "note": "Vercel：React 最佳实践技能", "official": true },
   { "repo": "obra/superpowers", "note": "Jesse Vincent 的 superpowers 技能集" },
   { "repo": "alirezarezvani/claude-skills", "note": "社区技能合集" }
 ]

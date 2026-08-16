@@ -30,6 +30,8 @@ const MAX_SKILL_BYTES = 200_000;
 interface Source {
   repo: string;
   note?: string;
+  /** 官方来源标记（如 anthropics、vercel-labs），页面展示 Official 徽章 */
+  official?: boolean;
 }
 
 interface RepoInfo {
@@ -57,6 +59,7 @@ interface SkillRow {
   stars: number;
   html_url: string;
   updated_at: string;
+  official: number;
 }
 
 const token = process.env.GITHUB_TOKEN;
@@ -91,7 +94,8 @@ function openDb(): DatabaseSync {
       html_url       TEXT,
       default_branch TEXT,
       updated_at     TEXT,
-      last_synced_at TEXT
+      last_synced_at TEXT,
+      official       INTEGER NOT NULL DEFAULT 0
     );
     CREATE TABLE IF NOT EXISTS skills (
       repo_full_name TEXT NOT NULL REFERENCES repos(full_name),
@@ -117,6 +121,14 @@ function openDb(): DatabaseSync {
     db.exec(`ALTER TABLE skills ADD COLUMN score INTEGER NOT NULL DEFAULT 0`);
     db.exec(`ALTER TABLE skills ADD COLUMN score_detail TEXT`);
     console.log("ℹ️ 迁移：skills 表已补 score / score_detail 列");
+  }
+  // 迁移：老库补上官方来源标记列
+  const repoCols = db.prepare(`PRAGMA table_info(repos)`).all() as unknown as {
+    name: string;
+  }[];
+  if (!repoCols.some((c) => c.name === "official")) {
+    db.exec(`ALTER TABLE repos ADD COLUMN official INTEGER NOT NULL DEFAULT 0`);
+    console.log("ℹ️ 迁移：repos 表已补 official 列");
   }
   return db;
 }
@@ -237,15 +249,16 @@ async function sync(): Promise<void> {
   const now = new Date().toISOString();
 
   const upsertRepo = db.prepare(`
-    INSERT INTO repos (full_name, description, stars, html_url, default_branch, updated_at, last_synced_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO repos (full_name, description, stars, html_url, default_branch, updated_at, last_synced_at, official)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(full_name) DO UPDATE SET
       description = excluded.description,
       stars = excluded.stars,
       html_url = excluded.html_url,
       default_branch = excluded.default_branch,
       updated_at = excluded.updated_at,
-      last_synced_at = excluded.last_synced_at
+      last_synced_at = excluded.last_synced_at,
+      official = excluded.official
   `);
   const upsertSkill = db.prepare(`
     INSERT INTO skills (repo_full_name, path, name, description, body, tags, author, version, license, score, score_detail)
@@ -263,7 +276,7 @@ async function sync(): Promise<void> {
   `);
 
   let totalSkills = 0;
-  for (const { repo: fullName } of sources) {
+  for (const { repo: fullName, official } of sources) {
     const { owner, repo } = parseRepo(fullName);
     console.log(`\n📦 ${fullName}`);
 
@@ -276,7 +289,8 @@ async function sync(): Promise<void> {
       info.htmlUrl,
       info.defaultBranch,
       info.updatedAt,
-      now
+      now,
+      official ? 1 : 0
     );
 
     const paths = await listSkillPaths(owner, repo, info.defaultBranch);
@@ -360,7 +374,7 @@ async function sync(): Promise<void> {
 function exportSnapshot(db: DatabaseSync): void {
   const rows = db
     .prepare(
-      `SELECT s.*, r.description AS repo_description, r.stars, r.html_url, r.updated_at
+      `SELECT s.*, r.description AS repo_description, r.stars, r.html_url, r.updated_at, r.official
        FROM skills s JOIN repos r ON r.full_name = s.repo_full_name
        ORDER BY r.stars DESC, s.name ASC`
     )
@@ -395,6 +409,7 @@ function exportSnapshot(db: DatabaseSync): void {
       path: row.path,
       install,
       score: JSON.parse(row.score_detail) as SkillScore,
+      official: row.official === 1,
       repo: {
         fullName: row.repo_full_name,
         description: row.repo_description,

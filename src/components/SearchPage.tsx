@@ -7,6 +7,7 @@ import type { SkillSnapshot } from "@/lib/types";
 import { fetchCopyCounts } from "@/lib/counts";
 import InstallCommand from "./InstallCommand";
 import ScoreBadge from "./ScoreBadge";
+import OfficialBadge from "./OfficialBadge";
 import TrendingSection from "./TrendingSection";
 
 type SortKey = "score" | "stars" | "copies";
@@ -321,6 +322,7 @@ function SkillCard({ skill, count }: { skill: SkillSnapshot; count: number }) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <ScoreBadge score={skill.score} />
+          {skill.official && <OfficialBadge />}
           <Link
             href={href}
             translate="no"

@@ -6,6 +6,7 @@ import { loadSkills } from "@/lib/skills";
 import InstallCommand from "@/components/InstallCommand";
 import ScoreBadge from "@/components/ScoreBadge";
 import CopyCount from "@/components/CopyCount";
+import OfficialBadge from "@/components/OfficialBadge";
 import type { ScoreLevel, SkillScore } from "@/lib/types";
 
 export const dynamic = "force-static";
@@ -39,6 +40,7 @@ export default async function SkillDetailPage({
     install,
     score,
     path,
+    official,
     repo: repoMeta,
   } = found;
 
@@ -134,12 +136,15 @@ export default async function SkillDetailPage({
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.25em] text-signal">
               Skill · <span translate="no">{repoMeta.fullName}</span>
             </p>
-            <h1
-              translate="no"
-              className="text-balance text-3xl font-black tracking-tight text-ink sm:text-4xl"
-            >
-              {name}
-            </h1>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1
+                translate="no"
+                className="text-balance text-3xl font-black tracking-tight text-ink sm:text-4xl"
+              >
+                {name}
+              </h1>
+              {official && <OfficialBadge />}
+            </div>
             <p className="text-sm leading-relaxed text-ink-2 sm:text-base">
               {description}
             </p>
