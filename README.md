@@ -82,7 +82,7 @@ GITHUB_TOKEN=ghp_xxx npm run sync   # 建议设置，未设置会按 60 次/小�
 
 ## 构建与部署
 
-**线上地址：https://skillhub-beta.vercel.app/**（Vercel，推 main 分支自动部署；GitHub Pages 镜像：https://chuanyue98.github.io/skillhub/）
+**线上地址：https://skillhub-ai.vercel.app/**（Vercel，推 main 分支自动部署；GitHub Pages 镜像：https://chuanyue98.github.io/skillhub/）
 
 ```bash
 npm run build    # 静态导出到 out/
