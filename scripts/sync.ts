@@ -17,6 +17,7 @@ import { DatabaseSync } from "node:sqlite";
 import matter from "gray-matter";
 import type { SkillSnapshot, SkillScore } from "../src/lib/types";
 import { scoreSkill } from "../src/lib/score";
+import { assignCategory } from "../src/lib/categories";
 
 const ROOT = join(import.meta.dirname, "..");
 const DB_PATH = join(ROOT, "data", "skills.db");
@@ -60,6 +61,7 @@ interface SkillRow {
   html_url: string;
   updated_at: string;
   official: number;
+  category: string;
 }
 
 const token = process.env.GITHUB_TOKEN;
@@ -109,6 +111,7 @@ function openDb(): DatabaseSync {
       license        TEXT,
       score          INTEGER NOT NULL DEFAULT 0,
       score_detail   TEXT,       -- JSON：SkillScore 明细
+      category       TEXT NOT NULL DEFAULT 'general',
       PRIMARY KEY (repo_full_name, path)
     );
   `);
@@ -129,6 +132,11 @@ function openDb(): DatabaseSync {
   if (!repoCols.some((c) => c.name === "official")) {
     db.exec(`ALTER TABLE repos ADD COLUMN official INTEGER NOT NULL DEFAULT 0`);
     console.log("ℹ️ 迁移：repos 表已补 official 列");
+  }
+  // 迁移：老库补上分类列
+  if (!skillCols.some((c) => c.name === "category")) {
+    db.exec(`ALTER TABLE skills ADD COLUMN category TEXT NOT NULL DEFAULT 'general'`);
+    console.log("ℹ️ 迁移：skills 表已补 category 列");
   }
   return db;
 }
@@ -261,8 +269,8 @@ async function sync(): Promise<void> {
       official = excluded.official
   `);
   const upsertSkill = db.prepare(`
-    INSERT INTO skills (repo_full_name, path, name, description, body, tags, author, version, license, score, score_detail)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO skills (repo_full_name, path, name, description, body, tags, author, version, license, score, score_detail, category)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(repo_full_name, path) DO UPDATE SET
       name = excluded.name,
       description = excluded.description,
@@ -272,7 +280,8 @@ async function sync(): Promise<void> {
       version = excluded.version,
       license = excluded.license,
       score = excluded.score,
-      score_detail = excluded.score_detail
+      score_detail = excluded.score_detail,
+      category = excluded.category
   `);
 
   let totalSkills = 0;
@@ -333,6 +342,28 @@ async function sync(): Promise<void> {
         repoStars: info.stars,
         repoUpdatedAt: info.updatedAt,
       });
+      const snapshot = {
+        id: `${info.fullName}/${name}`,
+        name,
+        description,
+        body: content,
+        tags,
+        author: data.author ? String(data.author) : null,
+        version: data.version ? String(data.version) : null,
+        license: data.license ? String(data.license) : null,
+        install: `npx skills add ${info.fullName} --skill ${name}`,
+        score,
+        official: official === true,
+        repo: {
+          fullName: info.fullName,
+          description: info.description,
+          stars: info.stars,
+          htmlUrl: info.htmlUrl,
+          updatedAt: info.updatedAt,
+        },
+        path,
+      } as SkillSnapshot;
+      snapshot.category = assignCategory(snapshot);
       return {
         path,
         name,
@@ -343,6 +374,7 @@ async function sync(): Promise<void> {
         version: data.version ? String(data.version) : null,
         license: data.license ? String(data.license) : null,
         score,
+        category: snapshot.category,
       };
     });
 
@@ -359,7 +391,8 @@ async function sync(): Promise<void> {
         skill.version,
         skill.license,
         skill.score.total,
-        JSON.stringify(skill.score)
+        JSON.stringify(skill.score),
+        skill.category
       );
       totalSkills++;
       console.log(`  ✅ ${skill.name} (${skill.path})`);
@@ -410,6 +443,7 @@ function exportSnapshot(db: DatabaseSync): void {
       install,
       score: JSON.parse(row.score_detail) as SkillScore,
       official: row.official === 1,
+      category: row.category,
       repo: {
         fullName: row.repo_full_name,
         description: row.repo_description,
