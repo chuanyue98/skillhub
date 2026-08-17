@@ -9,6 +9,7 @@ import ScoreBadge from "./ScoreBadge";
 import CopyCount from "./CopyCount";
 import OfficialBadge from "./OfficialBadge";
 import LangToggle from "./LangToggle";
+import SkillCard from "./SkillCard";
 import { useLang } from "./LangProvider";
 
 /** 评分项中文标签 → i18n key（标签来自 score.ts，数据侧固定中文） */
@@ -29,7 +30,14 @@ const SCORE_LABEL_KEYS: Record<string, string> = {
   近期活跃: "score.recency",
 };
 
-export default function SkillDetail({ skill }: { skill: SkillSnapshot }) {
+export default function SkillDetail({
+  skill,
+  related = [],
+}: {
+  skill: SkillSnapshot;
+  /** 相关技能推荐（服务端算好传入） */
+  related?: SkillSnapshot[];
+}) {
   const { t, lang } = useLang();
   const { name, description, body, tags, author, version, license, install, score, path, official, repo: repoMeta } = skill;
 
@@ -151,6 +159,20 @@ export default function SkillDetail({ skill }: { skill: SkillSnapshot }) {
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
             </div>
           </div>
+
+          {/* 相关技能推荐 */}
+          {related.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ink-3">
+                {t("detail.related")}
+              </h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {related.map((s) => (
+                  <SkillCard key={s.id} skill={s} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </div>
     </main>

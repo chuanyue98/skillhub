@@ -60,6 +60,8 @@ const zh: Record<string, string> = {
   "detail.score": "质量评分",
   "detail.tags": "Tags",
   "detail.copied": "已复制 {n} 次",
+  "detail.related": "相关技能",
+  "detail.relatedEmpty": "暂无相关技能",
   // 评分项
   "score.descLen": "描述长度",
   "score.descPlaceholder": "描述非占位",
@@ -123,6 +125,8 @@ const en: Record<string, string> = {
   "detail.score": "Quality Score",
   "detail.tags": "Tags",
   "detail.copied": "installed {n} times",
+  "detail.related": "Related skills",
+  "detail.relatedEmpty": "No related skills",
   "score.descLen": "Description length",
   "score.descPlaceholder": "Non-placeholder",
   "score.descPurpose": "States purpose",
