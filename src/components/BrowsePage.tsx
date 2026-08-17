@@ -15,6 +15,7 @@ export default function BrowsePage({ skills }: { skills: SkillSnapshot[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [active, setActive] = useState<string | null>(null);
+  const [activeRepo, setActiveRepo] = useState<string | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const { t, lang } = useLang();
 
@@ -22,21 +23,25 @@ export default function BrowsePage({ skills }: { skills: SkillSnapshot[] }) {
     fetchCopyCounts().then(setCounts);
   }, []);
 
-  // URL ?cat= → 状态
+  // URL ?cat=&repo= → 状态
   useEffect(() => {
     const cat = searchParams.get("cat");
+    const repo = searchParams.get("repo");
     setActive((prev) => (prev === cat ? prev : cat));
+    setActiveRepo((prev) => (prev === repo ? prev : repo));
   }, [searchParams]);
 
   // 状态 → URL（replace，不刷历史）
   useEffect(() => {
     const t = setTimeout(() => {
-      router.replace(active ? `/browse?cat=${active}` : "/browse", {
-        scroll: false,
-      });
+      const params = new URLSearchParams();
+      if (active) params.set("cat", active);
+      if (activeRepo) params.set("repo", activeRepo);
+      const qs = params.toString();
+      router.replace(qs ? `/browse?${qs}` : "/browse", { scroll: false });
     }, 300);
     return () => clearTimeout(t);
-  }, [active, router]);
+  }, [active, activeRepo, router]);
 
   // 每个分类的计数
   const categoryCounts = useMemo(() => {
@@ -45,10 +50,22 @@ export default function BrowsePage({ skills }: { skills: SkillSnapshot[] }) {
     return m;
   }, [skills]);
 
+  const repos = useMemo(() => {
+    const map = new Map<string, { count: number; stars: number }>();
+    for (const s of skills) {
+      const cur = map.get(s.repo.fullName) ?? { count: 0, stars: 0 };
+      cur.count += 1;
+      cur.stars = Math.max(cur.stars, s.repo.stars);
+      map.set(s.repo.fullName, cur);
+    }
+    return [...map.entries()].sort((a, b) => b[1].count - a[1].count);
+  }, [skills]);
+
   const filtered = useMemo(() => {
-    const list = active ? skills.filter((s) => s.category === active) : skills;
+    let list = active ? skills.filter((s) => s.category === active) : skills;
+    if (activeRepo) list = list.filter((s) => s.repo.fullName === activeRepo);
     return [...list].sort((a, b) => b.score.total - a.score.total);
-  }, [skills, active]);
+  }, [skills, active, activeRepo]);
 
   const activeCat = CATEGORIES.find((c) => c.id === active) ?? null;
   const catLabel = (c: { label: string; labelEn: string }) =>
@@ -142,14 +159,35 @@ export default function BrowsePage({ skills }: { skills: SkillSnapshot[] }) {
               ) : (
                 <>{t("browse.countSkills", { n: filtered.length })}</>
               )}
+              {activeRepo && <> · {activeRepo}</>}
             </p>
+            <select
+              aria-label={t("filter.repo")}
+              value={activeRepo ?? ""}
+              onChange={(e) => setActiveRepo(e.target.value || null)}
+              className={`max-w-full cursor-pointer rounded-full border px-2.5 py-1 text-xs transition ${
+                activeRepo
+                  ? "border-signal bg-signal text-white"
+                  : "border-hairline bg-surface text-ink-2 hover:border-signal/50 hover:text-signal"
+              }`}
+            >
+              <option value="">{t("filter.repoAll")}</option>
+              {repos.map(([fullName, { count, stars }]) => (
+                <option key={fullName} value={fullName}>
+                  {fullName} ★ {stars.toLocaleString()} · {count}
+                </option>
+              ))}
+            </select>
           </div>
 
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-hairline-strong bg-surface px-6 py-16 text-center">
               <p className="text-sm text-ink-2">{t("browse.empty")}</p>
               <button
-                onClick={() => setActive(null)}
+                onClick={() => {
+                  setActive(null);
+                  setActiveRepo(null);
+                }}
                 className="rounded-md border border-hairline-strong bg-paper px-3 py-1.5 text-xs font-semibold text-ink-2 transition hover:border-signal hover:text-signal"
               >
                 {t("browse.viewAll")}
