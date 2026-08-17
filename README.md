@@ -113,20 +113,88 @@ npm run build    # serverless 构建（含 API 路由）
 
 ## REST API
 
-公开只读接口（带 CORS，可直接跨域调用）：
+公开只读接口（带 CORS，可直接跨域调用）。适合 SkillHub CLI（`sk`）、第三方工具集成、脚本抓取。
+
+**基础 URL**：`https://skillhub-ai.vercel.app/api`
+
+### 列表接口
 
 ```
-GET /api/skills                          # 列表（分页）
-GET /api/skills?q=react&tag=devops       # 关键词 + 标签筛选
-GET /api/skills?category=engineering     # 按分类筛选
-GET /api/skills?repo=anthropics/skills   # 按仓库筛选（逗号分隔多选）
-GET /api/skills?sort=copies|stars|score  # 排序（默认 score）
-GET /api/skills?page=2&limit=20          # 分页（limit ≤ 100）
-GET /api/skills?fields=id,name,score     # 字段裁剪（可省略 body 省流量）
-GET /api/skills/:owner/:repo/:name       # 单个技能详情
+GET /api/skills                            # 列表（分页）
+GET /api/skills?q=react&tag=devops         # 关键词 + 标签筛选
+GET /api/skills?category=engineering       # 按分类筛选
+GET /api/skills?repo=anthropics/skills     # 按仓库筛选（逗号分隔多选）
+GET /api/skills?sort=copies|stars|score    # 排序（默认 score）
+GET /api/skills?page=2&limit=20            # 分页（limit ≤ 100）
+GET /api/skills?fields=id,name,score.total # 字段裁剪（支持点路径，见下）
 ```
 
-响应格式：`{ total, page, limit, totalPages, items }`。
+响应格式：`{ total, page, limit, totalPages, items }`。`items` 是技能对象数组，字段如下：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | string | 全局唯一标识 `owner/repo/name` |
+| `name` | string | 技能名（SKILL.md frontmatter，缺省取目录名） |
+| `description` | string | 技能描述（agent 决定何时加载技能的关键） |
+| `body` | string | SKILL.md 全文（Markdown，体积大，默认返回） |
+| `tags` | string[] | 标签列表 |
+| `author` / `version` / `license` | string? | 元数据（可能缺失） |
+| `path` | string | SKILL.md 在仓库中的路径 |
+| `install` | string | 一键安装命令 `npx skills add owner/repo --skill name` |
+| `repo` | object | `{ fullName, description, stars, htmlUrl, updatedAt }` 仓库元数据 |
+| `official` | boolean? | 官方来源标记（anthropics / vercel-labs） |
+| `category` | string | 职业/主题分类（engineering、marketing、bizops…） |
+| `score` | object | `{ total, level, items[] }` 质量评分（0-100，A/B/C/D） |
+| `copies` | number | 仅 `sort=copies` 时附加：累计复制安装次数 |
+
+#### fields 字段裁剪（省流量利器）
+
+`fields` 接收逗号分隔的字段名，只返回指定的字段；**支持点路径**（`.` 取嵌套字段），适合只需要部分数据的 CLI / 脚本。不传则返回全部字段（含大体积 `body`）。
+
+```bash
+# 只取轻量字段，跳过 body（约节省 90% 流量）
+curl "https://skillhub-ai.vercel.app/api/skills?limit=5&fields=id,name,score.total,repo.stars,tags"
+
+# 点路径示例：只要评分总分和仓库星数
+curl "https://skillhub-ai.vercel.app/api/skills?q=code-review&fields=name,score.total,repo.fullName"
+
+# 组合用法：按热度排序 + 取轻量字段 + 第二页
+curl "https://skillhub-ai.vercel.app/api/skills?sort=copies&page=2&limit=10&fields=id,name,copies,score.total"
+```
+
+点路径会把嵌套对象裁剪成只剩你选的那几个键：
+
+```json
+{
+  "total": 384,
+  "items": [
+    {
+      "id": "obra/superpowers/brainstorming",
+      "name": "brainstorming",
+      "score": { "total": 88 },
+      "repo": { "fullName": "obra/superpowers" }
+    }
+  ]
+}
+```
+
+### 单技能详情
+
+```
+GET /api/skills/:owner/:repo/:name
+```
+
+```bash
+curl "https://skillhub-ai.vercel.app/api/skills/obra/superpowers/brainstorming"
+```
+
+返回单个技能完整对象（所有字段，含 `body`）。路径中的技能名需 URL 编码；不存在返回 `404 { "error": "not found" }`。
+
+### 其他说明
+
+- 全部接口带 `Access-Control-Allow-Origin: *`，浏览器跨域可直接 fetch
+- 错误响应统一为 `{ "error": "..." }` + 对应状态码（400 / 404）
+- 无鉴权、无速率限制，可放心集成（数据为公开快照，实时计数走 /api/counts）
 
 ## 目录结构
 

@@ -27,7 +27,7 @@ const CORS = {
  * 公开只读 API：技能目录查询。
  * 参数：q（关键词）、tag、category、repo（仓库 fullName，逗号分隔多选）、
  *       sort（score|stars|copies）、page、limit（默认 20，最大 100）、
- *       fields（逗号分隔子集，可省略 body）
+ *       fields（逗号分隔子集，支持点路径如 score.total、repo.stars，可省略 body）
  */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const sp = req.nextUrl.searchParams;
@@ -45,6 +45,47 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     .split(",")
     .map((f) => f.trim())
     .filter(Boolean);
+
+  /** 点路径取值：select({a:{b:1}}, "a.b") → 1；缺失返回 undefined */
+  const select = (obj: unknown, path: string): unknown => {
+    let cur: unknown = obj;
+    for (const p of path.split(".")) {
+      if (cur == null || typeof cur !== "object") return undefined;
+      cur = (cur as Record<string, unknown>)[p];
+    }
+    return cur;
+  };
+
+  /** 按 fields 裁剪：支持顶层字段（id, name）与点路径（score.total, repo.stars） */
+  const pick = (s: SkillSnapshot): Record<string, unknown> => {
+    const out: Record<string, unknown> = {};
+    const tops = new Set<string>();
+    const nested = new Map<string, string[]>();
+    for (const f of fields) {
+      const dot = f.indexOf(".");
+      if (dot === -1) tops.add(f);
+      else {
+        const top = f.slice(0, dot);
+        nested.set(top, [...(nested.get(top) ?? []), f.slice(dot + 1)]);
+      }
+    }
+    for (const key of Object.keys(s)) {
+      if (tops.has(key)) {
+        out[key] = (s as unknown as Record<string, unknown>)[key];
+      } else if (nested.has(key)) {
+        const src = (s as unknown as Record<string, unknown>)[key];
+        if (src != null && typeof src === "object") {
+          const sub: Record<string, unknown> = {};
+          for (const p of nested.get(key)!) {
+            const v = select(src, p);
+            if (v !== undefined) sub[p.split(".").pop()!] = v;
+          }
+          out[key] = sub;
+        }
+      }
+    }
+    return out;
+  };
 
   let skills = loadSkills();
 
@@ -92,12 +133,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const total = skills.length;
   const start = (page - 1) * limit;
   const items = skills.slice(start, start + limit).map((s) => {
-    const slim: Record<string, unknown> = { ...s };
-    if (fields.length) {
-      for (const key of Object.keys(slim)) {
-        if (!fields.includes(key)) delete slim[key];
-      }
-    }
+    const slim = fields.length ? pick(s) : { ...s };
     if (sort === "copies") slim.copies = counts[s.id] ?? 0;
     return slim;
   });
