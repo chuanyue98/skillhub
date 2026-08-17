@@ -1,6 +1,11 @@
 [
   { "repo": "anthropics/skills", "note": "Anthropic 官方技能库", "official": true },
   { "repo": "vercel-labs/agent-skills", "note": "Vercel：React 最佳实践技能", "official": true },
+  { "repo": "google/skills", "note": "Google 官方：Ads/Cloud 产品技能", "official": true },
   { "repo": "obra/superpowers", "note": "Jesse Vincent 的 superpowers 技能集" },
-  { "repo": "alirezarezvani/claude-skills", "note": "社区技能合集" }
+  { "repo": "alirezarezvani/claude-skills", "note": "社区技能合集" },
+  { "repo": "mattpocock/skills", "note": "Matt Pocock：Skills for Real Engineers" },
+  { "repo": "addyosmani/agent-skills", "note": "Addy Osmani：生产级工程技能" },
+  { "repo": "coreyhaines31/marketingskills", "note": "Corey Haines：营销技能集" },
+  { "repo": "kepano/obsidian-skills", "note": "Obsidian 官方技能（Steph Ango）" }
 ]
