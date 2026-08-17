@@ -51,14 +51,9 @@ export default function BrowsePage({ skills }: { skills: SkillSnapshot[] }) {
   }, [skills]);
 
   const repos = useMemo(() => {
-    const map = new Map<string, { count: number; stars: number }>();
-    for (const s of skills) {
-      const cur = map.get(s.repo.fullName) ?? { count: 0, stars: 0 };
-      cur.count += 1;
-      cur.stars = Math.max(cur.stars, s.repo.stars);
-      map.set(s.repo.fullName, cur);
-    }
-    return [...map.entries()].sort((a, b) => b[1].count - a[1].count);
+    const map = new Map<string, number>();
+    for (const s of skills) map.set(s.repo.fullName, (map.get(s.repo.fullName) ?? 0) + 1);
+    return [...map.entries()].sort((a, b) => b[1] - a[1]);
   }, [skills]);
 
   const filtered = useMemo(() => {
@@ -172,9 +167,9 @@ export default function BrowsePage({ skills }: { skills: SkillSnapshot[] }) {
               }`}
             >
               <option value="">{t("filter.repoAll")}</option>
-              {repos.map(([fullName, { count, stars }]) => (
+              {repos.map(([fullName, count]) => (
                 <option key={fullName} value={fullName}>
-                  {fullName} ★ {stars.toLocaleString()} · {count}
+                  {fullName} · {count}
                 </option>
               ))}
             </select>

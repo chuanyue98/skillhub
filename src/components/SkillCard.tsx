@@ -50,9 +50,6 @@ export default function SkillCard({
               #{rank}
             </span>
           )}
-          <span className="shrink-0 font-mono text-[11px] text-stamp">
-            ★ {skill.repo.stars.toLocaleString()}
-          </span>
         </span>
       </div>
 
