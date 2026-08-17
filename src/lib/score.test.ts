@@ -90,25 +90,25 @@ test("描述长度档位：20/60/120 字符", () => {
   assert.equal(lens(s120), 15);
 });
 
-test("版本：semver 满分、非 semver 3 分、缺失 0 分", () => {
+test("版本：semver 满分、非 semver 2 分、缺失 0 分", () => {
   const semver = scoreSkill(base({ version: "2.11.1" }));
   const loose = scoreSkill(base({ version: "v1" }));
   const none = scoreSkill(base({ version: null }));
   const v = (s: ReturnType<typeof scoreSkill>) =>
     s.items.find((i) => i.label === "版本")?.points;
-  assert.equal(v(semver), 5);
-  assert.equal(v(loose), 3);
+  assert.equal(v(semver), 3);
+  assert.equal(v(loose), 2);
   assert.equal(v(none), 0);
 });
 
-test("标签：≥3 满分、1-2 个 6 分、无 0 分", () => {
+test("标签：≥3 满分、1-2 个 4 分、无 0 分", () => {
   const three = scoreSkill(base({ tags: ["a", "b", "c"] }));
   const one = scoreSkill(base({ tags: ["a"] }));
   const none = scoreSkill(base({ tags: [] }));
   const tag = (s: ReturnType<typeof scoreSkill>) =>
     s.items.find((i) => i.label === "标签")?.points;
-  assert.equal(tag(three), 10);
-  assert.equal(tag(one), 6);
+  assert.equal(tag(three), 6);
+  assert.equal(tag(one), 4);
   assert.equal(tag(none), 0);
 });
 
@@ -117,9 +117,9 @@ test("正文结构：章节/代码/篇幅/用法四项", () => {
   const headings = s.items.find((i) => i.label === "正文章节")?.points;
   const code = s.items.find((i) => i.label === "代码示例")?.points;
   const usage = s.items.find((i) => i.label === "用法说明")?.points;
-  assert.equal(headings, 8); // ≥3 个 ##
-  assert.equal(code, 10); // 含 ```
-  assert.equal(usage, 5); // 含 usage/example/示例
+  assert.equal(headings, 10); // ≥3 个 ##
+  assert.equal(code, 13); // 含 ```
+  assert.equal(usage, 7); // 含 usage/example/示例
 });
 
 test("正文篇幅档位：100/300/800 字符", () => {
@@ -128,9 +128,9 @@ test("正文篇幅档位：100/300/800 字符", () => {
   const s800 = scoreSkill(base({ body: "x".repeat(800) }));
   const len = (s: ReturnType<typeof scoreSkill>) =>
     s.items.find((i) => i.label === "正文篇幅")?.points;
-  assert.equal(len(s100), 3);
-  assert.equal(len(s300), 5);
-  assert.equal(len(s800), 7);
+  assert.equal(len(s100), 5);
+  assert.equal(len(s300), 8);
+  assert.equal(len(s800), 10);
 });
 
 test("来源：星数档位 100/1000/5000", () => {
@@ -183,6 +183,13 @@ test("总分 = 所有明细项之和，且各项不超过满分", () => {
   }
   // 14 个评分项
   assert.equal(s.items.length, 14);
+  // 权重结构：正文 40 > 描述 30 > 元数据 15 = 来源 15
+  const byDim = (labels: string[]) =>
+    s.items.filter((i) => labels.includes(i.label)).reduce((a, i) => a + i.max, 0);
+  assert.equal(byDim(["描述长度", "描述非占位", "描述说明用途"]), 30);
+  assert.equal(byDim(["标签", "作者", "版本", "许可"]), 15);
+  assert.equal(byDim(["正文章节", "代码示例", "正文篇幅", "用法说明"]), 40);
+  assert.equal(byDim(["仓库星数", "仓库描述", "近期活跃"]), 15);
 });
 
 test("空技能 → D 级且总分低", () => {

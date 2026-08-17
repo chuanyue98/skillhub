@@ -1,7 +1,7 @@
 /**
  * 技能质量评分（0-100）
  *
- * 四个维度加权：description 质量 30 + 元数据完整度 25 + 正文结构 30 + 来源信誉 15。
+ * 四个维度加权：description 质量 30 + 元数据完整度 15 + 正文结构 40 + 来源信誉 15。
  * 每个维度拆成若干可解释的评分项，便于详情页展示明细，也便于日后调整权重。
  * 纯函数、无 IO，同步脚本与（将来的）提交审核都能复用。
  */
@@ -86,42 +86,45 @@ export function scoreSkill(input: ScoreInput): SkillScore {
     points: hasVerb ? 5 : 0,
   });
 
-  // ── 元数据完整度（25）─────────────────────────────────
+  // ── 元数据完整度（15）─────────────────────────────────
+  // 注：SKILL.md 开放标准只有 name+description，标签/作者/版本/许可非常见字段，
+  // 所以降权（25→15），避免系统性偏爱包装信息多的老式合集。
   items.push({
     label: "标签",
-    max: 10,
-    points: tags.length >= 3 ? 10 : tags.length >= 1 ? 6 : 0,
+    max: 6,
+    points: tags.length >= 3 ? 6 : tags.length >= 1 ? 4 : 0,
   });
-  items.push({ label: "作者", max: 5, points: input.author ? 5 : 0 });
+  items.push({ label: "作者", max: 3, points: input.author ? 3 : 0 });
   items.push({
     label: "版本",
-    max: 5,
-    points: version && SEMVER_RE.test(version) ? 5 : version ? 3 : 0,
+    max: 3,
+    points: version && SEMVER_RE.test(version) ? 3 : version ? 2 : 0,
   });
-  items.push({ label: "许可", max: 5, points: input.license ? 5 : 0 });
+  items.push({ label: "许可", max: 3, points: input.license ? 3 : 0 });
 
-  // ── 正文结构（30）─────────────────────────────────────
+  // ── 正文结构（40）─────────────────────────────────────
+  // 技能质量的核心看正文内容，权重最高。
   const headings = (body.match(/^#{2,}\s/gm) ?? []).length;
   items.push({
     label: "正文章节",
-    max: 8,
-    points: headings >= 3 ? 8 : headings >= 1 ? 4 : 0,
+    max: 10,
+    points: headings >= 3 ? 10 : headings >= 1 ? 5 : 0,
   });
   items.push({
     label: "代码示例",
-    max: 10,
-    points: body.includes("```") ? 10 : 0,
+    max: 13,
+    points: body.includes("```") ? 13 : 0,
   });
   const bodyLen = body.length;
   items.push({
     label: "正文篇幅",
-    max: 7,
-    points: bodyLen >= 800 ? 7 : bodyLen >= 300 ? 5 : bodyLen >= 100 ? 3 : 0,
+    max: 10,
+    points: bodyLen >= 800 ? 10 : bodyLen >= 300 ? 8 : bodyLen >= 100 ? 5 : 0,
   });
   items.push({
     label: "用法说明",
-    max: 5,
-    points: /(usage|example|示例|用法)/i.test(body) ? 5 : 0,
+    max: 7,
+    points: /(usage|example|示例|用法)/i.test(body) ? 7 : 0,
   });
 
   // ── 来源信誉（15）─────────────────────────────────────
