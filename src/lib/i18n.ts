@@ -7,6 +7,7 @@ export const LANGS: Lang[] = ["zh", "en"];
 const zh: Record<string, string> = {
   // 顶栏
   "header.browse": "分类浏览",
+  "header.submit": "提交",
   // 英雄区
   "hero.kicker": "SkillHub · SKILL.md 聚合目录",
   "hero.title1": "找到技能，",
@@ -62,6 +63,18 @@ const zh: Record<string, string> = {
   "detail.copied": "已复制 {n} 次",
   "detail.related": "相关技能",
   "detail.relatedEmpty": "暂无相关技能",
+  // 提交收录
+  "submit.kicker": "Submit a Skill Repo",
+  "submit.title": "提交技能仓库",
+  "submit.subtitle": "有好的 Agent Skills 仓库？填个表提交，审核通过后收录进 SkillHub。",
+  "submit.repoLabel": "GitHub 仓库",
+  "submit.repoPlaceholder": "owner/repo，如 yourname/awesome-skills",
+  "submit.repoHint": "公开仓库，包含 SKILL.md 技能文件。",
+  "submit.noteLabel": "补充说明（可选）",
+  "submit.notePlaceholder": "这个仓库有什么特色技能？",
+  "submit.cta": "创建提交 Issue",
+  "submit.back": "← 返回首页",
+  "submit.error": "请填写仓库地址（格式 owner/repo）",
   // 评分项
   "score.descLen": "描述长度",
   "score.descPlaceholder": "描述非占位",
@@ -81,6 +94,7 @@ const zh: Record<string, string> = {
 
 const en: Record<string, string> = {
   "header.browse": "Browse",
+  "header.submit": "Submit",
   "hero.kicker": "SkillHub · SKILL.md Registry",
   "hero.title1": "Find a skill,",
   "hero.title2": "copy the command, run it.",
@@ -127,6 +141,18 @@ const en: Record<string, string> = {
   "detail.copied": "installed {n} times",
   "detail.related": "Related skills",
   "detail.relatedEmpty": "No related skills",
+  // Submit
+  "submit.kicker": "Submit a Skill Repo",
+  "submit.title": "Submit a Skill Repo",
+  "submit.subtitle": "Have a great Agent Skills repo? Fill in the form and it will be reviewed for inclusion in SkillHub.",
+  "submit.repoLabel": "GitHub repo",
+  "submit.repoPlaceholder": "owner/repo, e.g. yourname/awesome-skills",
+  "submit.repoHint": "Public repo containing SKILL.md files.",
+  "submit.noteLabel": "Notes (optional)",
+  "submit.notePlaceholder": "What makes this repo special?",
+  "submit.cta": "Create submit issue",
+  "submit.back": "← Back to Home",
+  "submit.error": "Please enter a repo (format owner/repo)",
   "score.descLen": "Description length",
   "score.descPlaceholder": "Non-placeholder",
   "score.descPurpose": "States purpose",

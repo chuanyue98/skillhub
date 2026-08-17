@@ -162,6 +162,12 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
           >
             {t("header.browse")}
           </Link>
+          <Link
+            href="/submit"
+            className="rounded-full border border-hairline bg-surface px-2.5 py-1 transition hover:border-signal/50 hover:text-signal"
+          >
+            + {t("header.submit")}
+          </Link>
           <span className="rounded-full border border-hairline bg-surface px-2.5 py-1">
             {skills.length} SKILLS
           </span>

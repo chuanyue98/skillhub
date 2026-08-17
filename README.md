@@ -102,14 +102,18 @@ npm run build    # serverless 构建（含 API 路由）
 
 ## 新增数据源
 
-编辑 `sources.json`，任意公开 GitHub 仓库（含 `SKILL.md`）都可作为源：
+**作者提交**：访问 https://skillhub-ai.vercel.app/submit 填表，会自动生成预填的 GitHub issue（含仓库地址与说明），维护者审核后收录。
+
+**维护者手动添加**：编辑 `sources.json`，任意公开 GitHub 仓库（含 `SKILL.md`）都可作为源：
 
 ```json
 [
-  { "repo": "anthropics/skills", "note": "Anthropic 官方技能库" },
+  { "repo": "anthropics/skills", "note": "Anthropic 官方技能库", "official": true },
   { "repo": "your-name/your-skills", "note": "自定义说明" }
 ]
 ```
+
+然后 `npm run sync`（注意 GitHub API 未认证配额 60 次/小时，设置 `GITHUB_TOKEN` 可提升到 5000 次/小时）。
 
 ## REST API
 

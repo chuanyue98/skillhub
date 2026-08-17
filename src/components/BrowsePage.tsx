@@ -83,6 +83,12 @@ export default function BrowsePage({ skills }: { skills: SkillSnapshot[] }) {
         <div className="flex items-center gap-1.5">
           <LangToggle />
           <Link
+            href="/submit"
+            className="rounded-md border border-hairline bg-surface px-3 py-1.5 font-mono text-xs font-semibold text-ink-2 transition hover:border-signal/50 hover:text-signal"
+          >
+            + {t("header.submit")}
+          </Link>
+          <Link
             href="/"
             className="rounded-md border border-hairline bg-surface px-3 py-1.5 font-mono text-xs font-semibold text-ink-2 transition hover:border-signal/50 hover:text-signal"
           >
