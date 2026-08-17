@@ -21,6 +21,9 @@ export interface Category {
 
 const inDirs = (s: SkillSnapshot, dirs: string[]): boolean =>
   dirs.includes(s.path.split("/")[0]);
+/** 匹配路径前两级（如 skills/engineering/ask-matt → skills/engineering） */
+const inSubdirs = (s: SkillSnapshot, subdirs: string[]): boolean =>
+  subdirs.includes(s.path.split("/").slice(0, 2).join("/"));
 const hasTag = (s: SkillSnapshot, tags: string[]): boolean =>
   s.tags.some((t) => tags.includes(t));
 const inRepos = (s: SkillSnapshot, repos: string[]): boolean =>
@@ -36,8 +39,15 @@ export const CATEGORIES: Category[] = [
     descriptionEn: "Development, code review, DevOps and engineering quality",
     priority: 10,
     match: (s) =>
-      inRepos(s, ["vercel-labs/agent-skills", "obra/superpowers"]) ||
+      inRepos(s, [
+        "vercel-labs/agent-skills",
+        "obra/superpowers",
+        "google/skills",
+        "mattpocock/skills",
+        "addyosmani/agent-skills",
+      ]) ||
       inDirs(s, ["engineering", "engineering-team"]) ||
+      inSubdirs(s, ["skills/engineering", "skills/engineering-team"]) ||
       hasTag(s, [
         "engineering",
         "devops",
@@ -57,7 +67,9 @@ export const CATEGORIES: Category[] = [
     descriptionEn: "Content, growth, brand and acquisition",
     priority: 20,
     match: (s) =>
+      inRepos(s, ["coreyhaines31/marketingskills"]) ||
       inDirs(s, ["marketing-skill", "marketing"]) ||
+      inSubdirs(s, ["skills/marketing", "skills/marketing-skill"]) ||
       hasTag(s, ["marketing", "growth", "brand", "seo", "content"]),
   },
   {
@@ -163,7 +175,9 @@ export const CATEGORIES: Category[] = [
     descriptionEn: "Knowledge management, docs and daily efficiency",
     priority: 20,
     match: (s) =>
+      inRepos(s, ["kepano/obsidian-skills"]) ||
       inDirs(s, ["productivity"]) ||
+      inSubdirs(s, ["skills/productivity"]) ||
       hasTag(s, [
         "productivity",
         "knowledge-management",
@@ -192,9 +206,8 @@ export const CATEGORIES: Category[] = [
     description: "跨领域通用技能（含 Anthropic 官方库）",
     descriptionEn: "Cross-domain general skills (incl. Anthropic official)",
     priority: 100,
-    match: (s) =>
-      inRepos(s, ["anthropics/skills"]) ||
-      inDirs(s, ["skills", "template", "loop-library"]),
+    // 纯兜底：任何未匹配到具体分类的技能都归这里
+    match: () => true,
   },
 ];
 
