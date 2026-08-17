@@ -25,14 +25,19 @@ const CORS = {
 /**
  * GET /api/skills
  * 公开只读 API：技能目录查询。
- * 参数：q（关键词）、tag、category、sort（score|stars|copies）、
- *       page、limit（默认 20，最大 100）、fields（逗号分隔子集，可省略 body）
+ * 参数：q（关键词）、tag、category、repo（仓库 fullName，逗号分隔多选）、
+ *       sort（score|stars|copies）、page、limit（默认 20，最大 100）、
+ *       fields（逗号分隔子集，可省略 body）
  */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const sp = req.nextUrl.searchParams;
   const q = (sp.get("q") ?? "").trim().toLowerCase();
   const tag = sp.get("tag");
   const category = sp.get("category");
+  const repos = (sp.get("repo") ?? "")
+    .split(",")
+    .map((r) => r.trim().toLowerCase())
+    .filter(Boolean);
   const sort = sp.get("sort") ?? "score";
   const page = Math.max(1, parseInt(sp.get("page") ?? "1", 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(sp.get("limit") ?? "20", 10) || 20));
@@ -45,6 +50,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   if (tag) skills = skills.filter((s) => s.tags.includes(tag));
   if (category) skills = skills.filter((s) => s.category === category);
+  if (repos.length) {
+    skills = skills.filter((s) =>
+      repos.includes(s.repo.fullName.toLowerCase())
+    );
+  }
   if (q) {
     skills = skills.filter(
       (s) =>

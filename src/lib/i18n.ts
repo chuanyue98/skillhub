@@ -14,6 +14,8 @@ const zh: Record<string, string> = {
   "hero.subtitle":
     "聚合 GitHub 上的开源 Agent Skills（SKILL.md）。搜索、预览，一键装进你的 agent。",
   "search.placeholder": "搜索技能名、描述、标签、仓库…",
+  "filter.repo": "仓库",
+  "filter.repoAll": "全部仓库",
   // 排序
   "sort.score": "评分",
   "sort.copies": "热度",
@@ -83,6 +85,8 @@ const en: Record<string, string> = {
   "hero.subtitle":
     "Aggregating open-source Agent Skills (SKILL.md) from GitHub. Search, preview, and install into your agent in one click.",
   "search.placeholder": "Search name, description, tag, repo…",
+  "filter.repo": "Repo",
+  "filter.repoAll": "All repos",
   "sort.score": "Score",
   "sort.copies": "Hot",
   "sort.stars": "Stars",

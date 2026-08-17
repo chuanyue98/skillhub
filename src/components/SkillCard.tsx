@@ -11,10 +11,13 @@ import { useLang } from "./LangProvider";
 export default function SkillCard({
   skill,
   count = 0,
+  rank,
 }: {
   skill: SkillSnapshot;
   /** 复制安装次数（运行时从 /api/counts 拉取） */
   count?: number;
+  /** 热度排名（前 3 显示 🏆 徽章） */
+  rank?: number;
 }) {
   const href = `/skill/${skill.repo.fullName}/${skill.name}`;
   const { t } = useLang();
@@ -32,8 +35,24 @@ export default function SkillCard({
             {skill.name}
           </Link>
         </div>
-        <span className="shrink-0 font-mono text-[11px] text-stamp">
-          ★ {skill.repo.stars.toLocaleString()}
+        <span className="flex shrink-0 items-center gap-1.5">
+          {rank !== undefined && rank <= 3 && count > 0 && (
+            <span
+              title={`Hot #${rank}`}
+              className={`rounded-full px-1.5 py-0.5 font-mono text-[10px] font-bold ${
+                rank === 1
+                  ? "bg-amber-100 text-amber-700"
+                  : rank === 2
+                    ? "bg-slate-200 text-slate-600"
+                    : "bg-orange-100 text-orange-700"
+              }`}
+            >
+              #{rank}
+            </span>
+          )}
+          <span className="shrink-0 font-mono text-[11px] text-stamp">
+            ★ {skill.repo.stars.toLocaleString()}
+          </span>
         </span>
       </div>
 

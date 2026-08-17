@@ -69,7 +69,9 @@ export function scoreSkill(input: ScoreInput): SkillScore {
     points: descLen >= 120 ? 15 : descLen >= 60 ? 10 : descLen >= 20 ? 5 : 0,
   });
   const isPlaceholder =
-    PLACEHOLDER_RE.test(description) || description === input.name;
+    !description.trim() ||
+    PLACEHOLDER_RE.test(description) ||
+    description === input.name;
   items.push({
     label: "描述非占位",
     max: 10,

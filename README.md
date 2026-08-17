@@ -6,10 +6,10 @@
 
 - **GitHub 聚合索引**：从 `sources.json` 里配置的仓库自动抓取所有 `SKILL.md`，解析 frontmatter（name / description / tags / version / license…）
 - **元数据 DB**：同步结果落在本地 SQLite（`data/skills.db`），可做查询、增量、后续的评分/统计
-- **搜索页**：关键词（技能名 / 描述 / 标签 / 仓库）+ 热门标签筛选，支持按评分 / 星数 / 热度排序，筛选状态同步到 URL（`?q=&tag=&sort=&page=`）
+- **搜索页**：关键词（技能名 / 描述 / 标签 / 仓库）+ 热门标签 + 仓库下拉筛选，支持按评分 / 星数 / 热度排序，筛选状态同步到 URL（`?q=&tag=&repo=&sort=&page=`）；热度 Top 3 卡片显示 🏆 排名徽章
 - **技能详情页**：两栏布局（左信息栏吸顶 + 右正文），渲染 SKILL.md 正文（GFM 表格），展示元数据、质量评分明细与一键安装命令（点击复制）
 - **质量评分**：每个技能按 description 质量 / 元数据完整度 / 正文结构 / 来源信誉四个维度加权打分（0-100，A/B/C/D 四级），同步时自动计算
-- **复制安装计数**：点击「复制」写入 Vercel Redis（KV），卡片/详情页显示「已复制 N 次」，支持按热度排序
+- **复制安装计数**：点击「复制」写入 Vercel Redis（KV），卡片/详情页显示「已复制 N 次」，支持按热度排序；带 IP 去重防刷（同一 IP 对同一技能每天只计一次，`seen:` 键 48h 自动过期）
 - **热榜**：首页展示近 7 天被复制安装最多的 Top 6 技能
 - **Official 徽章**：官方来源（anthropics / vercel-labs）自动打标
 - **分类浏览页**（`/browse`）：按职业/主题归为 11 个分类（工程研发、市场营销、产品管理…），带计数侧栏
@@ -119,6 +119,7 @@ npm run build    # serverless 构建（含 API 路由）
 GET /api/skills                          # 列表（分页）
 GET /api/skills?q=react&tag=devops       # 关键词 + 标签筛选
 GET /api/skills?category=engineering     # 按分类筛选
+GET /api/skills?repo=anthropics/skills   # 按仓库筛选（逗号分隔多选）
 GET /api/skills?sort=copies|stars|score  # 排序（默认 score）
 GET /api/skills?page=2&limit=20          # 分页（limit ≤ 100）
 GET /api/skills?fields=id,name,score     # 字段裁剪（可省略 body 省流量）
@@ -147,7 +148,8 @@ skillhub/
 2. **质量与安全**：✅ description 质量评分已完成；SKILL.md linter、脚本静态扫描待做（技能会在用户机器上执行代码，安全审查不能省）
 3. **信任层**：✅ 复制计数 + 热度排序 + 热榜 + Official 徽章已完成
 4. **中心化注册表**：版本化发布、依赖解析（从"GitHub 聚合"演进为 npm 式 registry）
-5. **多语言**：站点界面中英切换
+5. **多语言**：站点界面中英切换（✅ 已完成）
+6. **质量与测试**：✅ 评分函数单元测试（`npm test`）；计数防刷 ✅；收录自动化待做
 
 ## License
 

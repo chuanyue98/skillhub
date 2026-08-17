@@ -28,6 +28,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
 
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeRepo, setActiveRepo] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortKey>("score");
   const [page, setPage] = useState(1);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -41,12 +42,14 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
   useEffect(() => {
     const q = searchParams.get("q") ?? "";
     const tag = searchParams.get("tag") ?? null;
+    const repo = searchParams.get("repo") ?? null;
     const sortParam = searchParams.get("sort");
     const s: SortKey =
       sortParam === "stars" || sortParam === "copies" ? sortParam : "score";
     const p = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
     setQuery((prev) => (prev === q ? prev : q));
     setActiveTag((prev) => (prev === tag ? prev : tag));
+    setActiveRepo((prev) => (prev === repo ? prev : repo));
     setSortBy((prev) => (prev === s ? prev : s));
     setPage((prev) => (prev === p ? prev : p));
   }, [searchParams]);
@@ -57,6 +60,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
     const q = query.trim();
     if (q) params.set("q", q);
     if (activeTag) params.set("tag", activeTag);
+    if (activeRepo) params.set("repo", activeRepo);
     if (sortBy !== "score") params.set("sort", sortBy);
     if (page > 1) params.set("page", String(page));
     const qs = params.toString();
@@ -64,12 +68,18 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
       router.replace(qs ? `/?${qs}` : "/", { scroll: false });
     }, 300);
     return () => clearTimeout(t);
-  }, [query, activeTag, sortBy, page, router]);
+  }, [query, activeTag, activeRepo, sortBy, page, router]);
 
-  const repoCount = useMemo(
-    () => new Set(skills.map((s) => s.repo.fullName)).size,
-    [skills]
-  );
+  const repos = useMemo(() => {
+    const map = new Map<string, { count: number; stars: number }>();
+    for (const s of skills) {
+      const cur = map.get(s.repo.fullName) ?? { count: 0, stars: 0 };
+      cur.count += 1;
+      cur.stars = Math.max(cur.stars, s.repo.stars);
+      map.set(s.repo.fullName, cur);
+    }
+    return [...map.entries()].sort((a, b) => b[1].count - a[1].count);
+  }, [skills]);
 
   const topTags = useMemo(() => {
     const counts = new Map<string, number>();
@@ -85,6 +95,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
     const q = query.trim().toLowerCase();
     const matched = skills.filter((s) => {
       if (activeTag && !s.tags.includes(activeTag)) return false;
+      if (activeRepo && s.repo.fullName !== activeRepo) return false;
       if (!q) return true;
       return (
         s.name.toLowerCase().includes(q) ||
@@ -105,7 +116,18 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
       }
       return b.score.total - a.score.total || b.repo.stars - a.repo.stars;
     });
-  }, [skills, query, activeTag, sortBy, counts]);
+  }, [skills, query, activeTag, activeRepo, sortBy, counts]);
+
+  // 热度排名（基于全量计数，Top 3 卡片显示 🏆 徽章）
+  const ranks = useMemo(() => {
+    const byCount = [...skills]
+      .map((s) => ({ id: s.id, c: counts[s.id] ?? 0 }))
+      .filter((x) => x.c > 0)
+      .sort((a, b) => b.c - a.c);
+    const m = new Map<string, number>();
+    byCount.forEach((x, i) => m.set(x.id, i + 1));
+    return m;
+  }, [skills, counts]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -122,6 +144,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
   const resetFilters = () => {
     setQuery("");
     setActiveTag(null);
+    setActiveRepo(null);
     setPage(1);
   };
 
@@ -148,7 +171,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
             {skills.length} SKILLS
           </span>
           <span className="hidden rounded-full border border-hairline bg-surface px-2.5 py-1 sm:block">
-            {repoCount} REPOS
+            {repos.length} REPOS
           </span>
           <LangToggle />
         </div>
@@ -198,9 +221,32 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
               className="w-full rounded-xl border border-hairline-strong bg-surface py-3.5 pl-10 pr-4 text-sm text-ink placeholder-ink-3 outline-none transition focus:border-signal focus:shadow-[0_0_0_3px_rgba(14,122,74,0.12)]"
             />
           </div>
-          {topTags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {topTags.map(([tag, count]) => (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {/* 仓库筛选 */}
+            <select
+              aria-label={t("filter.repo")}
+              value={activeRepo ?? ""}
+              onChange={(e) => {
+                setActiveRepo(e.target.value || null);
+                setPage(1);
+              }}
+              className={`max-w-full cursor-pointer rounded-full border px-2.5 py-1 text-xs transition ${
+                activeRepo
+                  ? "border-signal bg-signal text-white"
+                  : "border-hairline bg-surface text-ink-2 hover:border-signal/50 hover:text-signal"
+              }`}
+            >
+              <option value="">
+                {t("filter.repoAll")}
+              </option>
+              {repos.map(([fullName, { count, stars }]) => (
+                <option key={fullName} value={fullName}>
+                  {fullName} ★ {stars.toLocaleString()} · {count}
+                </option>
+              ))}
+            </select>
+            {topTags.length > 0 &&
+              topTags.map(([tag, count]) => (
                 <button
                   key={tag}
                   onClick={() => {
@@ -219,8 +265,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
                   </span>
                 </button>
               ))}
-            </div>
-          )}
+          </div>
         </div>
       </section>
 
@@ -238,6 +283,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
               </>
             )}
             {activeTag && <> · #{activeTag}</>}
+            {activeRepo && <> · {activeRepo}</>}
             {totalPages > 1 && (
               <>
                 {" · "}
@@ -283,7 +329,12 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {pageSkills.map((s) => (
-              <SkillCard key={s.id} skill={s} count={counts[s.id] ?? 0} />
+              <SkillCard
+                key={s.id}
+                skill={s}
+                count={counts[s.id] ?? 0}
+                rank={ranks.get(s.id)}
+              />
             ))}
           </div>
         )}
