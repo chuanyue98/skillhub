@@ -47,5 +47,10 @@
     "repo": "geeklee/srt-whiteboard-animation",
     "vendor": true,
     "note": "geeklee：SRT 字幕 → 白板手绘动画（零散小仓库，已存档进本仓库）"
+  },
+  {
+    "repo": "derek-zhuolin/VideoHand",
+    "vendor": true,
+    "note": "derek-zhuolin：手绘风视频/白板动画工具链（零散小仓库，已存档进本仓库）"
   }
 ]

@@ -115,7 +115,7 @@ npm run sync                                               # 存档完记得同�
 `scripts/vendor.ts` 的行为：
 
 - 存**含 SKILL.md 的目录下全部文件**（脚本、references、requirements…）+ 仓库根的 `LICENSE/NOTICE`（转存要留授权）
-- 按 commit 固定版本下载（raw 域名，二进制安全），单文件上限 1MB、单仓库上限 10MB，超限跳过并告警；SKILL.md 排最前，撞配额也不会被牺牲
+- 按 commit 固定版本下载（raw 域名，二进制安全），单文件上限 2MB（放得下字体等运行时资源）、单仓库上限 10MB，超限跳过并告警；SKILL.md 排最前，撞配额也不会被牺牲
 - 写 `vendored/<owner>/<repo>/MIRROR.json`：上游 commit、分支、元数据快照（描述/星数/许可）、每个文件的 sha256 清单
 - 上游删掉的文件会同步从存档裁剪；`--check` 用 sha256 校验存档没被误改
 

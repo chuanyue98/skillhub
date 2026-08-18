@@ -15,8 +15,12 @@ export const SITE_REPO = "chuanyue98/skillhub";
 /** 存档根目录（相对仓库根） */
 export const VENDOR_ROOT = "vendored";
 
-/** 单文件大小上限：超过就不进存档（存档是给人读的源码，不是网盘） */
-export const MAX_FILE_BYTES = 1_000_000;
+/**
+ * 单文件大小上限：超过就不进存档（存档是给人读的源码，不是网盘）。
+ * 放到 2MB 是因为字体/模型这类技能运行时真要用的资源常常超过 1MB，
+ * 而演示视频、打包好的文档页通常更大，仍会被挡在外面。
+ */
+export const MAX_FILE_BYTES = 2_000_000;
 
 /** 单仓库存档总量上限，防止一个带素材的仓库把 git 仓库撑爆 */
 export const MAX_REPO_BYTES = 10_000_000;
