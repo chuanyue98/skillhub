@@ -3,7 +3,12 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { SkillSnapshot, ScoreLevel, SkillScore } from "@/lib/types";
+import type {
+  SkillSnapshot,
+  ScoreLevel,
+  SkillScore,
+  SkillSecurity,
+} from "@/lib/types";
 import InstallCommand from "./InstallCommand";
 import ScoreBadge from "./ScoreBadge";
 import CopyCount from "./CopyCount";
@@ -154,6 +159,11 @@ export default function SkillDetail({
             </p>
           </header>
 
+          {/* 安全扫描提示 */}
+          {skill.security && skill.security.risk !== "none" && (
+            <SecurityBanner security={skill.security} />
+          )}
+
           <div className="rounded-xl border border-hairline bg-surface px-5 py-6 sm:px-8 sm:py-8">
             <div className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
@@ -185,6 +195,63 @@ const BAR_COLORS: Record<ScoreLevel, string> = {
   C: "bg-amber-500",
   D: "bg-zinc-400",
 };
+
+const RISK_STYLES: Record<Exclude<SkillSecurity["risk"], "none">, string> = {
+  high: "border-red-500/50 bg-red-500/5 text-red-900",
+  medium: "border-amber-500/50 bg-amber-500/5 text-amber-900",
+  low: "border-hairline-strong bg-surface text-ink-2",
+};
+
+const RISK_DOT: Record<Exclude<SkillSecurity["risk"], "none">, string> = {
+  high: "bg-red-600",
+  medium: "bg-amber-500",
+  low: "bg-ink-3",
+};
+
+/** 安全扫描提示条：按风险等级着色，列出命中的危险命令片段 */
+function SecurityBanner({ security }: { security: SkillSecurity }) {
+  const { t } = useLang();
+  // 仅在 risk !== "none" 时渲染，这里安全地窄化为非 none 类型
+  const risk = security.risk as Exclude<SkillSecurity["risk"], "none">;
+  const warnings = security.warnings;
+  return (
+    <div
+      role="alert"
+      className={`flex flex-col gap-2 rounded-xl border px-4 py-3 ${RISK_STYLES[risk]}`}
+    >
+      <div className="flex items-center gap-2">
+        <span
+          className={`h-2 w-2 shrink-0 rounded-full ${RISK_DOT[risk]}`}
+          aria-hidden="true"
+        />
+        <span className="font-mono text-[11px] font-bold uppercase tracking-widest">
+          {t("sec.title")}
+        </span>
+        <span className="text-xs font-semibold">{t(`sec.risk.${risk}`)}</span>
+      </div>
+      {warnings.length > 0 && (
+        <ul className="flex flex-col gap-1.5">
+          {warnings.map((w, i) => (
+            <li key={i} className="flex flex-col gap-0.5 text-xs leading-snug">
+              <span className="font-semibold">
+                {t(w.code)}
+                <span className="ml-1.5 font-mono text-[10px] opacity-60">
+                  {t("sec.match")}
+                </span>
+              </span>
+              <code
+                translate="no"
+                className="break-all rounded bg-hairline/60 px-1.5 py-0.5 font-mono text-[11px] opacity-80"
+              >
+                {w.match}
+              </code>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 /** 质量评分面板：总分 + 可展开的维度明细（默认折叠，避免侧栏超高一屏） */
 function ScorePanel({ score }: { score: SkillScore }) {

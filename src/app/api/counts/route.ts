@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { kv, kvReady } from "@/lib/kv";
 
-/** GET /api/counts → { [skillId]: count } */
-export async function GET(): Promise<NextResponse> {
+/**
+ * GET /api/counts → { [skillId]: count }
+ * GET /api/counts?id=owner/repo/name → { [skillId]: count }（单查，避免详情页拉全量）
+ */
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  const single = req.nextUrl.searchParams.get("id");
+  if (single) {
+    let count = 0;
+    if (kvReady()) {
+      try {
+        count = Number((await kv.get(`copy:${single}`)) ?? 0);
+      } catch {
+        // 读失败返回 0
+      }
+    }
+    return NextResponse.json({ [single]: count });
+  }
+
   const out: Record<string, number> = {};
   if (kvReady()) {
     try {

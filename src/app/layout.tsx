@@ -16,6 +16,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://skillhub-ai.vercel.app"),
   title: "SkillHub · AI 智能体技能库",
   description:
     "聚合 GitHub 上开源 AI Agent Skills（SKILL.md）：搜索、预览、一键安装。",

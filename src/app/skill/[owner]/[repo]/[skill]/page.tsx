@@ -1,5 +1,6 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { loadSkills } from "@/lib/skills";
+import { loadSkills, loadBodies } from "@/lib/skills";
 import type { SkillSnapshot } from "@/lib/types";
 import SkillDetail from "@/components/SkillDetail";
 
@@ -10,6 +11,29 @@ export function generateStaticParams() {
     const [owner, repo] = s.repo.fullName.split("/");
     return { owner, repo, skill: s.name };
   });
+}
+
+/** 详情页 SEO：标题用技能名，描述用技能 description */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ owner: string; repo: string; skill: string }>;
+}): Promise<Metadata> {
+  const { owner, repo, skill } = await params;
+  const found = loadSkills().find(
+    (s) => s.repo.fullName === `${owner}/${repo}` && s.name === skill
+  );
+  if (!found) return {};
+  const title = `${found.name} · SkillHub`;
+  return {
+    title,
+    description: found.description,
+    openGraph: {
+      title,
+      description: found.description,
+      type: "article",
+    },
+  };
 }
 
 /**
@@ -49,7 +73,9 @@ export default async function SkillDetailPage({
   );
   if (!found) notFound();
 
+  // 正文单独存在 bodies.json，这里按 id 合并成完整技能
+  const full = { ...found, body: loadBodies()[found.id] ?? "" };
   const related = findRelated(found, all);
 
-  return <SkillDetail skill={found} related={related} />;
+  return <SkillDetail skill={full} related={related} />;
 }

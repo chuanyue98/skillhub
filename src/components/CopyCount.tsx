@@ -9,7 +9,8 @@ export default function CopyCount({ skillId }: { skillId: string }) {
   const { t } = useLang();
 
   useEffect(() => {
-    fetch("/api/counts", { cache: "no-store" })
+    // 单查：只取当前技能计数，不拉全量（?id= 支持 owner/repo/name 带斜杠的 id）
+    fetch(`/api/counts?id=${encodeURIComponent(skillId)}`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : {}))
       .then((data: Record<string, number>) => setCount(data[skillId] ?? 0))
       .catch(() => {});

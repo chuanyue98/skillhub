@@ -1,20 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import type { SkillSnapshot } from "@/lib/types";
+import { loadSkills, loadBodies } from "@/lib/skills";
+import { pickFields } from "@/lib/fields";
 import { kv } from "@/lib/kv";
 
 export const dynamic = "force-dynamic";
-
-const SNAPSHOT = join(process.cwd(), "public", "data", "skills.json");
-
-function loadSkills(): SkillSnapshot[] {
-  try {
-    return JSON.parse(readFileSync(SNAPSHOT, "utf8")) as SkillSnapshot[];
-  } catch {
-    return [];
-  }
-}
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -45,47 +35,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     .split(",")
     .map((f) => f.trim())
     .filter(Boolean);
-
-  /** 点路径取值：select({a:{b:1}}, "a.b") → 1；缺失返回 undefined */
-  const select = (obj: unknown, path: string): unknown => {
-    let cur: unknown = obj;
-    for (const p of path.split(".")) {
-      if (cur == null || typeof cur !== "object") return undefined;
-      cur = (cur as Record<string, unknown>)[p];
-    }
-    return cur;
-  };
-
-  /** 按 fields 裁剪：支持顶层字段（id, name）与点路径（score.total, repo.stars） */
-  const pick = (s: SkillSnapshot): Record<string, unknown> => {
-    const out: Record<string, unknown> = {};
-    const tops = new Set<string>();
-    const nested = new Map<string, string[]>();
-    for (const f of fields) {
-      const dot = f.indexOf(".");
-      if (dot === -1) tops.add(f);
-      else {
-        const top = f.slice(0, dot);
-        nested.set(top, [...(nested.get(top) ?? []), f.slice(dot + 1)]);
-      }
-    }
-    for (const key of Object.keys(s)) {
-      if (tops.has(key)) {
-        out[key] = (s as unknown as Record<string, unknown>)[key];
-      } else if (nested.has(key)) {
-        const src = (s as unknown as Record<string, unknown>)[key];
-        if (src != null && typeof src === "object") {
-          const sub: Record<string, unknown> = {};
-          for (const p of nested.get(key)!) {
-            const v = select(src, p);
-            if (v !== undefined) sub[p.split(".").pop()!] = v;
-          }
-          out[key] = sub;
-        }
-      }
-    }
-    return out;
-  };
 
   let skills = loadSkills();
 
@@ -132,8 +81,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const total = skills.length;
   const start = (page - 1) * limit;
+  // 正文默认返回；fields 里显式包含 body 时也返回（元数据快照不含 body，需按 id 合并）
+  const wantBody = fields.length === 0 || fields.includes("body");
+  const bodies = wantBody ? loadBodies() : {};
   const items = skills.slice(start, start + limit).map((s) => {
-    const slim = fields.length ? pick(s) : { ...s };
+    const slim = fields.length
+      ? pickFields(s as unknown as Record<string, unknown>, fields)
+      : { ...s };
+    if (wantBody) slim.body = bodies[s.id] ?? "";
     if (sort === "copies") slim.copies = counts[s.id] ?? 0;
     return slim;
   });

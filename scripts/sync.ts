@@ -18,10 +18,13 @@ import matter from "gray-matter";
 import type { SkillSnapshot, SkillScore } from "../src/lib/types";
 import { scoreSkill } from "../src/lib/score";
 import { assignCategory } from "../src/lib/categories";
+import { scanSkill } from "../src/lib/security";
+import { pickBestByKey } from "../src/lib/dedup";
 
 const ROOT = join(import.meta.dirname, "..");
 const DB_PATH = join(ROOT, "data", "skills.db");
 const OUT_PATH = join(ROOT, "public", "data", "skills.json");
+const BODIES_PATH = join(ROOT, "public", "data", "bodies.json");
 const SOURCES_PATH = join(ROOT, "sources.json");
 const API = "https://api.github.com";
 
@@ -415,17 +418,15 @@ function exportSnapshot(db: DatabaseSync): void {
 
   // 同一 id（repo + name）去重：合集仓库里重名技能常有多份镜像 SKILL.md，
   // 保留路径更短（更规范）且正文更全的一份，避免页面 key 冲突与重复详情页
-  const deduped = new Map<string, SkillRow>();
-  const better = (a: SkillRow, b: SkillRow): boolean =>
-    a.path.length < b.path.length ||
-    (a.path.length === b.path.length &&
-      (a.body?.length ?? 0) > (b.body?.length ?? 0));
-  for (const row of rows) {
-    const key = `${row.repo_full_name}/${row.name}`;
-    const cur = deduped.get(key);
-    if (!cur || better(row, cur)) deduped.set(key, row);
-  }
-  const dropped = rows.length - deduped.size;
+  const deduped = pickBestByKey(
+    rows,
+    (row) => `${row.repo_full_name}/${row.name}`,
+    (a, b) =>
+      a.path.length < b.path.length ||
+      (a.path.length === b.path.length &&
+        (a.body?.length ?? 0) > (b.body?.length ?? 0))
+  );
+  const dropped = rows.length - deduped.length;
 
   const skills: SkillSnapshot[] = [...deduped.values()].map((row) => {
     const name = row.name;
@@ -444,6 +445,7 @@ function exportSnapshot(db: DatabaseSync): void {
       score: JSON.parse(row.score_detail) as SkillScore,
       official: row.official === 1,
       category: row.category,
+      security: scanSkill(row.body ?? ""),
       repo: {
         fullName: row.repo_full_name,
         description: row.repo_description,
@@ -454,10 +456,23 @@ function exportSnapshot(db: DatabaseSync): void {
     };
   });
 
+  // 拆分快照：skills.json 只存元数据（列表页数据源，瘦身 90%+），
+  // bodies.json 按 id 索引正文（详情页 / API 按需合并）。
+  const meta: Omit<SkillSnapshot, "body">[] = skills.map(({ body: _body, ...rest }) => rest);
+  const bodies: Record<string, string> = {};
+  for (const s of skills) bodies[s.id] = s.body ?? "";
+
   mkdirSync(dirname(OUT_PATH), { recursive: true });
-  writeFileSync(OUT_PATH, JSON.stringify(skills, null, 2) + "\n");
+  writeFileSync(OUT_PATH, JSON.stringify(meta, null, 2) + "\n");
+  writeFileSync(BODIES_PATH, JSON.stringify(bodies) + "\n");
   const suffix = dropped > 0 ? `（去重 ${dropped} 个重名）` : "";
-  console.log(`\n📄 导出 ${skills.length} 个技能${suffix} → ${OUT_PATH}`);
+  const kb = (n: number) => `${(n / 1024).toFixed(0)}KB`;
+  const metaBytes = Buffer.byteLength(JSON.stringify(meta));
+  const bodyBytes = Buffer.byteLength(JSON.stringify(bodies));
+  console.log(
+    `\n📄 导出 ${skills.length} 个技能${suffix} → ${OUT_PATH}（${kb(metaBytes)}，瘦身 ${kb(7_000_000 - metaBytes)}）`
+  );
+  console.log(`   📄 正文索引 ${Object.keys(bodies).length} 条 → ${BODIES_PATH}（${kb(bodyBytes)}）`);
 }
 
 function printStats(db: DatabaseSync): void {
