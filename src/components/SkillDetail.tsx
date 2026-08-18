@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type {
   SkillSnapshot,
+  MirrorMeta,
   ScoreLevel,
   SkillScore,
   SkillSecurity,
@@ -13,6 +14,7 @@ import InstallCommand from "./InstallCommand";
 import ScoreBadge from "./ScoreBadge";
 import CopyCount from "./CopyCount";
 import OfficialBadge from "./OfficialBadge";
+import ArchivedBadge from "./ArchivedBadge";
 import LangToggle from "./LangToggle";
 import SkillCard from "./SkillCard";
 import { useLang } from "./LangProvider";
@@ -119,6 +121,10 @@ export default function SkillDetail({
 
           <ScorePanel score={score} />
 
+          {skill.mirror && (
+            <MirrorPanel mirror={skill.mirror} upstreamUrl={repoMeta.htmlUrl} skillId={skill.id} />
+          )}
+
 
           {tags.length > 0 && (
             <div className="flex flex-col gap-2">
@@ -153,6 +159,7 @@ export default function SkillDetail({
                 {name}
               </h1>
               {official && <OfficialBadge />}
+              {skill.mirror && <ArchivedBadge />}
             </div>
             <p className="text-sm leading-relaxed text-ink-2 sm:text-base">
               {description}
@@ -207,6 +214,87 @@ const RISK_DOT: Record<Exclude<SkillSecurity["risk"], "none">, string> = {
   medium: "bg-amber-500",
   low: "bg-ink-3",
 };
+
+/**
+ * 存档面板：这个技能已整份镜像进 SkillHub 仓库（零散小仓库才有）。
+ * 存档是备份不是改姓——原仓库链接、存档版本 commit、存档时间都摆在这里；
+ * 上游删库时额外提示「你现在看的是存档副本」。
+ */
+function MirrorPanel({
+  mirror,
+  upstreamUrl,
+  skillId,
+}: {
+  mirror: MirrorMeta;
+  upstreamUrl: string;
+  skillId: string;
+}) {
+  const { t, lang } = useLang();
+  const archivedOn = new Date(mirror.mirroredAt).toLocaleDateString(
+    lang === "en" ? "en-US" : "zh-CN"
+  );
+  return (
+    <div className="flex flex-col gap-2.5 rounded-xl border border-stamp/30 bg-stamp-soft/50 px-4 py-3.5">
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-stamp">
+          {t("mirror.title")}
+        </span>
+      </div>
+      <p className="text-[11px] leading-relaxed text-ink-2">{t("mirror.desc")}</p>
+
+      {mirror.upstreamGone && (
+        <p role="alert" className="text-[11px] font-semibold leading-relaxed text-stamp">
+          {t("mirror.gone")}
+        </p>
+      )}
+
+      <dl className="flex flex-col gap-1.5 text-[11px]">
+        <div className="flex items-baseline gap-2">
+          <dt className="shrink-0 font-mono text-[10px] uppercase tracking-widest text-ink-3">
+            {t("mirror.upstream")}
+          </dt>
+          <dd className="min-w-0 truncate">
+            <a
+              href={upstreamUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-mono text-ink-2 transition hover:text-signal hover:underline underline-offset-2"
+            >
+              GitHub<span aria-hidden="true"> ↗</span>
+            </a>
+          </dd>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <dt className="shrink-0 font-mono text-[10px] uppercase tracking-widest text-ink-3">
+            {t("mirror.commit")}
+          </dt>
+          <dd translate="no" className="font-mono text-ink-2">
+            {mirror.commit.slice(0, 7)}
+            <span className="ml-1.5 text-ink-3">· {archivedOn}</span>
+          </dd>
+        </div>
+      </dl>
+
+      <a
+        href={mirror.archiveUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="w-fit font-mono text-[11px] font-semibold text-stamp transition hover:underline underline-offset-2"
+      >
+        {t("mirror.browse")}
+      </a>
+
+      {mirror.installFallback && (
+        <div className="flex flex-col gap-1.5 border-t border-stamp/20 pt-2.5">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-ink-3">
+            {t("mirror.fallback")}
+          </span>
+          <InstallCommand command={mirror.installFallback} skillId={skillId} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** 安全扫描提示条：按风险等级着色，列出命中的危险命令片段 */
 function SecurityBanner({ security }: { security: SkillSecurity }) {

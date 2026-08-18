@@ -2,8 +2,10 @@
  * SkillHub 同步脚本
  *
  * 数据流：sources.json（仓库列表）
- *   → GitHub REST API 取仓库元数据 + git tree 定位所有 SKILL.md
- *   → raw.githubusercontent.com 拉内容（不走 API 配额）
+ *   → 引用型仓库（热门/官方）：GitHub REST API 取元数据 + git tree 定位所有 SKILL.md，
+ *     raw.githubusercontent.com 拉内容（不走 API 配额）
+ *   → 存档型仓库（sources.json 标 vendor:true 的零散小仓库）：正文直接读本地 vendored/
+ *     存档副本（见 scripts/vendor.ts），上游删库也照样出数据，仓库链接仍指向原 GitHub
  *   → gray-matter 解析 frontmatter
  *   → 写入 SQLite（data/skills.db，本机权威存储，可做分析/增量）
  *   → 导出 public/data/skills.json 快照（网页运行时数据源，提交进仓库）
@@ -11,7 +13,7 @@
  * 运行：npm run sync
  * 建议：设置 GITHUB_TOKEN 环境变量（未设置时仓库 API 仅 60 次/小时）
  */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import matter from "gray-matter";
@@ -20,6 +22,14 @@ import { scoreSkill } from "../src/lib/score";
 import { assignCategory } from "../src/lib/categories";
 import { scanSkill } from "../src/lib/security";
 import { pickBestByKey } from "../src/lib/dedup";
+import {
+  SITE_REPO,
+  archiveUrl,
+  skillFiles,
+  vendorDir,
+  vendorPath,
+  type MirrorManifest,
+} from "../src/lib/vendor";
 
 const ROOT = join(import.meta.dirname, "..");
 const DB_PATH = join(ROOT, "data", "skills.db");
@@ -36,6 +46,8 @@ interface Source {
   note?: string;
   /** 官方来源标记（如 anthropics、vercel-labs），页面展示 Official 徽章 */
   official?: boolean;
+  /** true = 已用 npm run vendor 存进本仓库，正文读本地存档而非上游 */
+  vendor?: boolean;
 }
 
 interface RepoInfo {
@@ -65,6 +77,16 @@ interface SkillRow {
   updated_at: string;
   official: number;
   category: string;
+  /** 存档信息 JSON（引用型仓库为 null），见 src/lib/vendor.ts */
+  mirror: string | null;
+}
+
+/** 存档型仓库在 repos 表里存的那一小段 JSON */
+interface RepoMirror {
+  commit: string;
+  mirroredAt: string;
+  /** 同步时上游已无法访问 */
+  upstreamGone: boolean;
 }
 
 const token = process.env.GITHUB_TOKEN;
@@ -100,7 +122,8 @@ function openDb(): DatabaseSync {
       default_branch TEXT,
       updated_at     TEXT,
       last_synced_at TEXT,
-      official       INTEGER NOT NULL DEFAULT 0
+      official       INTEGER NOT NULL DEFAULT 0,
+      mirror         TEXT        -- JSON：存档信息（commit/mirroredAt/upstreamGone），引用型仓库为 NULL
     );
     CREATE TABLE IF NOT EXISTS skills (
       repo_full_name TEXT NOT NULL REFERENCES repos(full_name),
@@ -135,6 +158,11 @@ function openDb(): DatabaseSync {
   if (!repoCols.some((c) => c.name === "official")) {
     db.exec(`ALTER TABLE repos ADD COLUMN official INTEGER NOT NULL DEFAULT 0`);
     console.log("ℹ️ 迁移：repos 表已补 official 列");
+  }
+  // 迁移：老库补上存档信息列
+  if (!repoCols.some((c) => c.name === "mirror")) {
+    db.exec(`ALTER TABLE repos ADD COLUMN mirror TEXT`);
+    console.log("ℹ️ 迁移：repos 表已补 mirror 列");
   }
   // 迁移：老库补上分类列
   if (!skillCols.some((c) => c.name === "category")) {
@@ -246,6 +274,113 @@ async function fetchRaw(
   }
 }
 
+/** 解析后的技能行（写库 + 导出快照都用它） */
+interface ParsedSkill {
+  path: string;
+  name: string;
+  description: string;
+  content: string;
+  tags: string;
+  author: string | null;
+  version: string | null;
+  license: string | null;
+  score: SkillScore;
+  category: string;
+}
+
+/** 解析一份 SKILL.md：frontmatter → 评分 → 归类，坏数据返回 null 不中断同步 */
+function parseSkill(
+  raw: string,
+  path: string,
+  info: RepoInfo,
+  official: boolean
+): ParsedSkill | null {
+  let data: Record<string, unknown>;
+  let content: string;
+  try {
+    ({ data, content } = matter(raw));
+  } catch {
+    console.warn(`  ⚠️ 跳过 ${path}（frontmatter 不是合法 YAML）`);
+    return null;
+  }
+  const name = String(data.name ?? slugify(dirname(path).split("/").pop() ?? path)).trim();
+  const description = String(data.description ?? "").trim();
+  if (!name || !description) {
+    console.warn(`  ⚠️ 跳过 ${path}（缺 name 或 description）`);
+    return null;
+  }
+  const tags = normalizeTags(data.tags);
+  const author = data.author ? String(data.author) : null;
+  const version = data.version ? String(data.version) : null;
+  const license = data.license ? String(data.license) : null;
+  const score = scoreSkill({
+    name,
+    description,
+    body: content,
+    tags,
+    author,
+    version,
+    license,
+    repoDescription: info.description,
+    repoStars: info.stars,
+    repoUpdatedAt: info.updatedAt,
+  });
+  const snapshot = {
+    id: `${info.fullName}/${name}`,
+    name,
+    description,
+    body: content,
+    tags,
+    author,
+    version,
+    license,
+    install: `npx skills add ${info.fullName} --skill ${name}`,
+    score,
+    official,
+    repo: {
+      fullName: info.fullName,
+      description: info.description,
+      stars: info.stars,
+      htmlUrl: info.htmlUrl,
+      updatedAt: info.updatedAt,
+    },
+    path,
+  } as SkillSnapshot;
+  snapshot.category = assignCategory(snapshot);
+  return {
+    path,
+    name,
+    description,
+    content,
+    tags: JSON.stringify(tags),
+    author,
+    version,
+    license,
+    score,
+    category: snapshot.category,
+  };
+}
+
+/** 读取某个仓库的存档清单（没存档过返回 null） */
+function readManifest(fullName: string): MirrorManifest | null {
+  const p = join(ROOT, vendorDir(fullName), "MIRROR.json");
+  if (!existsSync(p)) return null;
+  try {
+    return JSON.parse(readFileSync(p, "utf8")) as MirrorManifest;
+  } catch {
+    console.warn(`  ⚠️ ${vendorDir(fullName)}/MIRROR.json 解析失败，按未存档处理`);
+    return null;
+  }
+}
+
+/** 从本地存档读一份 SKILL.md 正文 */
+function readVendored(fullName: string, path: string): string | null {
+  const p = join(ROOT, vendorPath(fullName, path));
+  if (!existsSync(p)) return null;
+  const text = readFileSync(p, "utf8");
+  return Buffer.byteLength(text, "utf8") > MAX_SKILL_BYTES ? null : text;
+}
+
 async function sync(): Promise<void> {
   const sources = JSON.parse(readFileSync(SOURCES_PATH, "utf8")) as Source[];
   if (!sources.length) {
@@ -260,8 +395,8 @@ async function sync(): Promise<void> {
   const now = new Date().toISOString();
 
   const upsertRepo = db.prepare(`
-    INSERT INTO repos (full_name, description, stars, html_url, default_branch, updated_at, last_synced_at, official)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO repos (full_name, description, stars, html_url, default_branch, updated_at, last_synced_at, official, mirror)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(full_name) DO UPDATE SET
       description = excluded.description,
       stars = excluded.stars,
@@ -269,7 +404,8 @@ async function sync(): Promise<void> {
       default_branch = excluded.default_branch,
       updated_at = excluded.updated_at,
       last_synced_at = excluded.last_synced_at,
-      official = excluded.official
+      official = excluded.official,
+      mirror = excluded.mirror
   `);
   const upsertSkill = db.prepare(`
     INSERT INTO skills (repo_full_name, path, name, description, body, tags, author, version, license, score, score_detail, category)
@@ -288,12 +424,36 @@ async function sync(): Promise<void> {
   `);
 
   let totalSkills = 0;
-  for (const { repo: fullName, official } of sources) {
+  for (const { repo: fullName, official, vendor } of sources) {
     const { owner, repo } = parseRepo(fullName);
-    console.log(`\n📦 ${fullName}`);
+    console.log(`\n📦 ${fullName}${vendor ? "  🗄️ 存档" : ""}`);
 
-    const info = await fetchRepoInfo(owner, repo);
-    if (!info) continue;
+    const manifest = vendor ? readManifest(fullName) : null;
+    if (vendor && !manifest) {
+      console.warn("  ⚠️ 标了 vendor 但还没有存档副本，本次退回实时抓取（补跑 npm run vendor）");
+    }
+
+    // 存档型仓库：上游只用来刷新星数/描述，拿不到就用存档里的元数据快照兜底
+    const live = await fetchRepoInfo(owner, repo);
+    if (!live && !manifest) continue;
+    const info: RepoInfo = live ?? {
+      fullName: manifest!.repo,
+      description: manifest!.description,
+      stars: manifest!.stars,
+      htmlUrl: manifest!.htmlUrl,
+      defaultBranch: manifest!.branch,
+      updatedAt: manifest!.updatedAt,
+    };
+    const mirror: RepoMirror | null = manifest
+      ? {
+          commit: manifest.commit,
+          mirroredAt: manifest.mirroredAt,
+          upstreamGone: live === null,
+        }
+      : null;
+    if (mirror?.upstreamGone) {
+      console.log("  🗄️ 上游已无法访问 —— 用存档副本继续同步");
+    }
     upsertRepo.run(
       info.fullName,
       info.description,
@@ -302,83 +462,32 @@ async function sync(): Promise<void> {
       info.defaultBranch,
       info.updatedAt,
       now,
-      official ? 1 : 0
+      official ? 1 : 0,
+      mirror ? JSON.stringify(mirror) : null
     );
 
-    const paths = await listSkillPaths(owner, repo, info.defaultBranch);
+    const paths = manifest
+      ? skillFiles(manifest)
+      : await listSkillPaths(owner, repo, info.defaultBranch);
     if (!paths.length) {
       console.log("  （未找到 SKILL.md）");
       continue;
     }
 
-    // 并行拉取+解析（内容走 raw 不限流），结果顺序与 paths 一致
+    // 存档型直接读本地文件；引用型并行拉取（内容走 raw 不限流），结果顺序与 paths 一致
     const parsed = await mapLimit(paths, 8, async (path) => {
-      const raw = await fetchRaw(owner, repo, info.defaultBranch, path);
+      const raw = manifest
+        ? readVendored(fullName, path)
+        : await fetchRaw(owner, repo, info.defaultBranch, path);
       if (raw === null) {
-        console.warn(`  ⚠️ 跳过 ${path}（拉取失败或超过 ${MAX_SKILL_BYTES / 1024}KB）`);
+        console.warn(
+          manifest
+            ? `  ⚠️ 跳过 ${path}（存档文件缺失，重跑 npm run vendor）`
+            : `  ⚠️ 跳过 ${path}（拉取失败或超过 ${MAX_SKILL_BYTES / 1024}KB）`
+        );
         return null;
       }
-      let data: Record<string, unknown>;
-      let content: string;
-      try {
-        ({ data, content } = matter(raw));
-      } catch {
-        console.warn(`  ⚠️ 跳过 ${path}（frontmatter 不是合法 YAML）`);
-        return null;
-      }
-      const name = String(data.name ?? slugify(dirname(path).split("/").pop() ?? path)).trim();
-      const description = String(data.description ?? "").trim();
-      if (!name || !description) {
-        console.warn(`  ⚠️ 跳过 ${path}（缺 name 或 description）`);
-        return null;
-      }
-      const tags = normalizeTags(data.tags);
-      const score = scoreSkill({
-        name,
-        description,
-        body: content,
-        tags,
-        author: data.author ? String(data.author) : null,
-        version: data.version ? String(data.version) : null,
-        license: data.license ? String(data.license) : null,
-        repoDescription: info.description,
-        repoStars: info.stars,
-        repoUpdatedAt: info.updatedAt,
-      });
-      const snapshot = {
-        id: `${info.fullName}/${name}`,
-        name,
-        description,
-        body: content,
-        tags,
-        author: data.author ? String(data.author) : null,
-        version: data.version ? String(data.version) : null,
-        license: data.license ? String(data.license) : null,
-        install: `npx skills add ${info.fullName} --skill ${name}`,
-        score,
-        official: official === true,
-        repo: {
-          fullName: info.fullName,
-          description: info.description,
-          stars: info.stars,
-          htmlUrl: info.htmlUrl,
-          updatedAt: info.updatedAt,
-        },
-        path,
-      } as SkillSnapshot;
-      snapshot.category = assignCategory(snapshot);
-      return {
-        path,
-        name,
-        description,
-        content,
-        tags: JSON.stringify(tags),
-        author: data.author ? String(data.author) : null,
-        version: data.version ? String(data.version) : null,
-        license: data.license ? String(data.license) : null,
-        score,
-        category: snapshot.category,
-      };
+      return parseSkill(raw, path, info, official === true);
     });
 
     for (const skill of parsed) {
@@ -410,7 +519,7 @@ async function sync(): Promise<void> {
 function exportSnapshot(db: DatabaseSync): void {
   const rows = db
     .prepare(
-      `SELECT s.*, r.description AS repo_description, r.stars, r.html_url, r.updated_at, r.official
+      `SELECT s.*, r.description AS repo_description, r.stars, r.html_url, r.updated_at, r.official, r.mirror
        FROM skills s JOIN repos r ON r.full_name = s.repo_full_name
        ORDER BY r.stars DESC, s.name ASC`
     )
@@ -431,6 +540,8 @@ function exportSnapshot(db: DatabaseSync): void {
   const skills: SkillSnapshot[] = [...deduped.values()].map((row) => {
     const name = row.name;
     const install = `npx skills add ${row.repo_full_name} --skill ${name}`;
+    const mirror = row.mirror ? (JSON.parse(row.mirror) as RepoMirror) : null;
+    const skillDir = dirname(row.path);
     return {
       id: `${row.repo_full_name}/${name}`,
       name,
@@ -446,6 +557,17 @@ function exportSnapshot(db: DatabaseSync): void {
       official: row.official === 1,
       category: row.category,
       security: scanSkill(row.body ?? ""),
+      ...(mirror
+        ? {
+            mirror: {
+              dir: vendorPath(row.repo_full_name, skillDir),
+              commit: mirror.commit,
+              mirroredAt: mirror.mirroredAt,
+              archiveUrl: archiveUrl(row.repo_full_name, skillDir),
+              ...(mirror.upstreamGone ? { upstreamGone: true } : {}),
+            },
+          }
+        : {}),
       repo: {
         fullName: row.repo_full_name,
         description: row.repo_description,
@@ -456,6 +578,17 @@ function exportSnapshot(db: DatabaseSync): void {
     };
   });
 
+  // 备用安装命令：技能名在存档集合里唯一时，可直接从 SkillHub 仓库装存档副本
+  const mirroredNames = new Map<string, number>();
+  for (const s of skills) {
+    if (s.mirror) mirroredNames.set(s.name, (mirroredNames.get(s.name) ?? 0) + 1);
+  }
+  for (const s of skills) {
+    if (s.mirror && mirroredNames.get(s.name) === 1) {
+      s.mirror.installFallback = `npx skills add ${SITE_REPO} --skill ${s.name}`;
+    }
+  }
+
   // 拆分快照：skills.json 只存元数据（列表页数据源，瘦身 90%+），
   // bodies.json 按 id 索引正文（详情页 / API 按需合并）。
   const meta: Omit<SkillSnapshot, "body">[] = skills.map(({ body: _body, ...rest }) => rest);
@@ -465,6 +598,7 @@ function exportSnapshot(db: DatabaseSync): void {
   mkdirSync(dirname(OUT_PATH), { recursive: true });
   writeFileSync(OUT_PATH, JSON.stringify(meta, null, 2) + "\n");
   writeFileSync(BODIES_PATH, JSON.stringify(bodies) + "\n");
+  const mirrored = skills.filter((s) => s.mirror).length;
   const suffix = dropped > 0 ? `（去重 ${dropped} 个重名）` : "";
   const kb = (n: number) => `${(n / 1024).toFixed(0)}KB`;
   const metaBytes = Buffer.byteLength(JSON.stringify(meta));
@@ -473,6 +607,7 @@ function exportSnapshot(db: DatabaseSync): void {
     `\n📄 导出 ${skills.length} 个技能${suffix} → ${OUT_PATH}（${kb(metaBytes)}，瘦身 ${kb(7_000_000 - metaBytes)}）`
   );
   console.log(`   📄 正文索引 ${Object.keys(bodies).length} 条 → ${BODIES_PATH}（${kb(bodyBytes)}）`);
+  if (mirrored) console.log(`   🗄️  其中 ${mirrored} 个来自本仓库存档（vendored/）`);
 }
 
 function printStats(db: DatabaseSync): void {

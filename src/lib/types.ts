@@ -36,6 +36,27 @@ export interface SkillSnapshot {
   score: SkillScore;
   /** 安全扫描结果（危险命令检测），由 sync 脚本计算 */
   security?: SkillSecurity;
+  /** 存档信息：该技能的文件已整份镜像进 SkillHub 仓库（零散小仓库才有） */
+  mirror?: MirrorMeta;
+}
+
+/**
+ * 存档元信息。热门大仓库只做引用（无此字段），零散小仓库由 `npm run vendor`
+ * 把技能目录整份镜像进本仓库，上游删库也不会丢——原仓库链接仍在 repo.htmlUrl。
+ */
+export interface MirrorMeta {
+  /** 存档目录在 SkillHub 仓库里的路径（vendored/owner/repo/技能目录） */
+  dir: string;
+  /** 存档对应的上游 commit sha */
+  commit: string;
+  /** 存档时间（ISO） */
+  mirroredAt: string;
+  /** 浏览存档文件的链接（指向 SkillHub 仓库） */
+  archiveUrl: string;
+  /** 同步时上游仓库已无法访问（删库/转私有），页面提示「正在看存档副本」 */
+  upstreamGone?: boolean;
+  /** 从存档安装的备用命令（技能名在存档集合里唯一时才给） */
+  installFallback?: string;
 }
 
 export type ScoreLevel = "A" | "B" | "C" | "D";

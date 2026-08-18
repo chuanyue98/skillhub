@@ -5,6 +5,7 @@ import type { SkillSnapshot } from "@/lib/types";
 import InstallCommand from "./InstallCommand";
 import ScoreBadge from "./ScoreBadge";
 import OfficialBadge from "./OfficialBadge";
+import ArchivedBadge from "./ArchivedBadge";
 import { useLang } from "./LangProvider";
 
 /** 技能卡片：评分徽章 + 名字 + 描述 + 标签 + 仓库 + 复制计数/按钮 */
@@ -27,6 +28,7 @@ export default function SkillCard({
         <div className="flex min-w-0 items-center gap-2">
           <ScoreBadge score={skill.score} />
           {skill.official && <OfficialBadge />}
+          {skill.mirror && <ArchivedBadge />}
           <Link
             href={href}
             translate="no"

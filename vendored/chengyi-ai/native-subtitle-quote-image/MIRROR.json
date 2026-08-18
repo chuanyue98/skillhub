@@ -1,0 +1,38 @@
+{
+  "repo": "chengyi-ai/native-subtitle-quote-image",
+  "htmlUrl": "https://github.com/chengyi-ai/native-subtitle-quote-image",
+  "branch": "main",
+  "commit": "f1fa5b70448f620ea92179357eca4b0222481b9d",
+  "description": "保留视频内嵌字幕，精确取帧并生成 3:4 社交长图的 Agent Skill",
+  "stars": 100,
+  "license": "MIT",
+  "updatedAt": "2026-08-18T08:15:14Z",
+  "mirroredAt": "2026-08-18T12:13:21.233Z",
+  "files": [
+    {
+      "path": "LICENSE",
+      "bytes": 1063,
+      "sha256": "3bc29ed45f6090b76421337ae9d01f11eb746340fa890a280d1997e0abb1b5db"
+    },
+    {
+      "path": "skills/native-subtitle-quote-image/agents/openai.yaml",
+      "bytes": 261,
+      "sha256": "f4a66ebaf5a83db15ec30b5d268f93db6fdb4b9ef590e91446311c3f1f6159f2"
+    },
+    {
+      "path": "skills/native-subtitle-quote-image/requirements.txt",
+      "bytes": 33,
+      "sha256": "3f5a73fbf5b2690a1fc153b9a15f9d052b6a8aa388fe40d4c55f8696f77430bb"
+    },
+    {
+      "path": "skills/native-subtitle-quote-image/scripts/native_subtitle_stitch.py",
+      "bytes": 8034,
+      "sha256": "26a7befd6814551af11beb652f5788152d9bf98cc7d3b4885f15c87e4426d7fd"
+    },
+    {
+      "path": "skills/native-subtitle-quote-image/SKILL.md",
+      "bytes": 3605,
+      "sha256": "f099da0c3eb8f81e57b01a7982bcaac1e3a8e0e0ba38c4a49a57cb9d3c5e0b21"
+    }
+  ]
+}

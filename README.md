@@ -13,20 +13,25 @@
 - **复制安装计数**：点击「复制」写入 Vercel Redis（KV），卡片/详情页显示「已复制 N 次」，支持按热度排序；带 IP 去重防刷（同一 IP 对同一技能每天只计一次，`seen:` 键 48h 自动过期）
 - **热榜**：首页展示近 7 天被复制安装最多的 Top 6 技能
 - **Official 徽章**：官方来源（anthropics / vercel-labs）自动打标
+- **零散仓库存档**：热门大仓库只做引用，随时可能消失的零散小仓库用 `npm run vendor` 把技能目录（SKILL.md + 脚本 + LICENSE）整份镜像进 `vendored/`，带 commit 与 sha256 清单；页面标「已存档」徽章，同时保留原仓库链接，上游删库后站点照常可用
 - **分类浏览页**（`/browse`）：按职业/主题归为 11 个分类（工程研发、市场营销、产品管理…），带计数侧栏
 - **REST API**：`/api/skills` 公开只读接口，支持筛选 / 排序 / 分页 / 字段裁剪，带 CORS
 
 ## 架构与数据流
 
 ```
-sources.json（仓库列表）
+sources.json（仓库列表；vendor:true = 存档型）
+      │
+      ├── 存档型：npm run vendor（scripts/vendor.ts）
+      │        └─ 按 commit 拉技能目录全部文件 → vendored/<owner>/<repo>/ + MIRROR.json
+      │
       │  npm run sync（scripts/sync.ts）
       ▼
 GitHub REST API ── 仓库元数据 + git tree 定位 SKILL.md
-      │
+      │            （存档型：上游只用来刷新星数，挂了就用 MIRROR.json 兜底）
       ▼
 raw.githubusercontent.com ── 拉取正文（不走 API 配额，8 路并发）
-      │
+      │                       （存档型：正文直接读本地 vendored/，不联网）
       ▼
 gray-matter ── 解析 frontmatter（坏 YAML / 缺字段自动跳过，不中断同步）
       │
@@ -51,6 +56,7 @@ Vercel Redis（KV）── 复制计数与热榜的实时存储
 
 关键设计：
 
+- **引用 vs 存档**：热门/官方仓库（十万星级）不会凭空消失，只存引用、每次同步实时抓；零散的个人小仓库随时可能删库或转私有，用 `vendor` 把文件整份存进本仓库，`repo.htmlUrl` 仍指向原 GitHub——存档是备份，不是改姓。
 - **快照提交进仓库**：Vercel 构建时不需要访问 GitHub，构建可复现；技能数据变更走 `npm run sync` 提交快照。
 - **正文与元数据拆分**：`skills.json` 只存元数据（列表页数据源，体积从 7MB 降到 ~1.1MB），正文单独存 `bodies.json` 按 id 索引——详情页 / API 需要时才合并，首页/浏览页不再把全部正文灌给浏览器。
 - **SQLite 与 JSON 快照分工**：SQLite 是「数据层」（同步、分析、将来的审核/评分），JSON 快照是「发布层」（页面与 API 读取）。改动 schema 时只需改 `sync.ts` 和 `src/lib/types.ts` 两处。
@@ -95,6 +101,28 @@ GITHUB_TOKEN=ghp_xxx npm run sync   # 建议设置，未设置会按 60 次/小�
 - 单请求 20 秒超时、8 路并发，单个坏仓库/坏技能不会中断整个同步
 - 导出时把同仓库重名技能去重（保留路径更短、正文更全的一份），并拆分元数据（`skills.json`）与正文（`bodies.json`）
 
+### 存档脚本（零散仓库备份）
+
+热门大仓库只做引用；随时可能消失的零散小仓库，把技能文件整份存进本仓库：
+
+```bash
+npm run vendor -- chengyi-ai/native-subtitle-quote-image   # 存档指定仓库（自动写进 sources.json，标 vendor:true）
+npm run vendor                                             # 存档 sources.json 里所有 vendor:true 的仓库（更新到最新 commit）
+npm run vendor -- --check                                  # 体检：上游 commit 是否变了、本地存档有无缺失/被改动
+npm run sync                                               # 存档完记得同步，快照才会带上存档信息
+```
+
+`scripts/vendor.ts` 的行为：
+
+- 存**含 SKILL.md 的目录下全部文件**（脚本、references、requirements…）+ 仓库根的 `LICENSE/NOTICE`（转存要留授权）
+- 按 commit 固定版本下载（raw 域名，二进制安全），单文件上限 1MB、单仓库上限 10MB，超限跳过并告警；SKILL.md 排最前，撞配额也不会被牺牲
+- 写 `vendored/<owner>/<repo>/MIRROR.json`：上游 commit、分支、元数据快照（描述/星数/许可）、每个文件的 sha256 清单
+- 上游删掉的文件会同步从存档裁剪；`--check` 用 sha256 校验存档没被误改
+
+存档后的技能在站点上：卡片与详情页带「已存档」徽章，详情页给出原仓库链接、存档 commit 与时间、「浏览存档文件」入口，以及从存档安装的备用命令（`npx skills add chuanyue98/skillhub --skill <name>`，技能名唯一时才给）。上游仓库不可访问时，同步不会丢数据——正文读本地存档、元数据用 `MIRROR.json` 兜底，页面额外提示「你看到的是存档副本」。
+
+**收录策略**：官方 / 十万星级的大仓库 → 只引用（`sources.json` 不加 `vendor`）；单技能的个人仓库、低星、作者随时可能删库 → 加 `"vendor": true` 存档。
+
 ## 构建与部署
 
 **线上地址：https://skillhub-ai.vercel.app/**（Vercel，推 main 分支自动部署）
@@ -115,9 +143,12 @@ npm run build    # serverless 构建（含 API 路由）
 ```json
 [
   { "repo": "anthropics/skills", "note": "Anthropic 官方技能库", "official": true },
-  { "repo": "your-name/your-skills", "note": "自定义说明" }
+  { "repo": "your-name/your-skills", "note": "自定义说明" },
+  { "repo": "someone/one-off-skill", "note": "零散小仓库", "vendor": true }
 ]
 ```
+
+字段：`official` 打官方徽章；`vendor: true` 表示存档进本仓库（先跑 `npm run vendor` 生成 `vendored/`，再 `npm run sync`）。
 
 然后 `npm run sync`（注意 GitHub API 未认证配额 60 次/小时，设置 `GITHUB_TOKEN` 可提升到 5000 次/小时）。
 
@@ -153,6 +184,7 @@ GET /api/skills?fields=id,name,score.total # 字段裁剪（支持点路径，�
 | `install` | string | 一键安装命令 `npx skills add owner/repo --skill name` |
 | `repo` | object | `{ fullName, description, stars, htmlUrl, updatedAt }` 仓库元数据 |
 | `official` | boolean? | 官方来源标记（anthropics / vercel-labs） |
+| `mirror` | object? | 存档信息（仅存档型仓库）：`{ dir, commit, mirroredAt, archiveUrl, upstreamGone?, installFallback? }` |
 | `category` | string | 职业/主题分类（engineering、marketing、bizops…） |
 | `score` | object | `{ total, level, items[] }` 质量评分（0-100，A/B/C/D） |
 | `copies` | number | 仅 `sort=copies` 时附加：累计复制安装次数 |
@@ -210,25 +242,28 @@ curl "https://skillhub-ai.vercel.app/api/skills/obra/superpowers/brainstorming"
 
 ```
 skillhub/
-├── sources.json              # 聚合的 GitHub 仓库列表（official 标记官方源）
+├── sources.json              # 聚合的 GitHub 仓库列表（official 标记官方源，vendor 标记存档源）
 ├── scripts/sync.ts           # 抓取 → 解析 → SQLite → JSON 快照（含评分/分类/安全扫描）
+├── scripts/vendor.ts         # 零散仓库存档：按 commit 镜像技能目录 → vendored/ + MIRROR.json
+├── vendored/<owner>/<repo>/  # 存档副本（技能文件 + LICENSE + MIRROR.json 校验清单，随仓库提交）
 ├── data/skills.db            # 本地 SQLite（gitignore，不入库）
 ├── public/data/skills.json   # 元数据快照（无正文，列表页数据源，随仓库提交）
 ├── public/data/bodies.json   # 正文索引 { id: body }（详情页/API 按需合并）
 └── src/
     ├── app/                  # 页面 + API 路由（/api/skills、/api/counts、/api/trending）+ sitemap
     ├── components/           # SearchPage、BrowsePage、SkillCard、InstallCommand…
-    └── lib/                  # types、skills（快照加载）、score（评分）、security（安全扫描）、fields（字段裁剪）、categories（分类）、dedup（去重）、kv（Redis 客户端）
+    └── lib/                  # types、skills（快照加载）、score（评分）、security（安全扫描）、fields（字段裁剪）、categories（分类）、dedup（去重）、vendor（存档规则）、kv（Redis 客户端）
 ```
 
 ## 路线图（MVP 之后）
 
 1. **收录自动化**：✅ 提交表单（/submit 生成预填 issue）；自动收录审核待做
-2. **质量与安全**：✅ description 质量评分；✅ 危险命令静态扫描（管道 shell / rm -rf / / fork 炸弹等，详情页风险提示）；SKILL.md linter、更细的脚本静态分析待做
-3. **信任层**：✅ 复制计数 + 热度排序 + 热榜 + Official 徽章已完成
-4. **中心化注册表**：版本化发布、依赖解析（从"GitHub 聚合"演进为 npm 式 registry）
-5. **多语言**：站点界面中英切换（✅ 已完成）
-6. **质量与测试**：✅ 评分/字段裁剪/分类/去重/安全扫描单元测试（`npm test`）；计数防刷 ✅
+2. **抗消失**：✅ 零散仓库整份存档（`npm run vendor`，带 commit + sha256 清单，上游删库仍可用）；定时体检与自动更新存档待做
+3. **质量与安全**：✅ description 质量评分；✅ 危险命令静态扫描（管道 shell / rm -rf / / fork 炸弹等，详情页风险提示）；SKILL.md linter、更细的脚本静态分析待做
+4. **信任层**：✅ 复制计数 + 热度排序 + 热榜 + Official 徽章已完成
+5. **中心化注册表**：版本化发布、依赖解析（从"GitHub 聚合"演进为 npm 式 registry）
+6. **多语言**：站点界面中英切换（✅ 已完成）
+7. **质量与测试**：✅ 评分/字段裁剪/分类/去重/安全扫描单元测试（`npm test`）；计数防刷 ✅
 
 ## License
 
