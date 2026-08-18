@@ -94,6 +94,16 @@ const token = process.env.GITHUB_TOKEN;
 /** 单请求超时，防止某个连接挂起拖死整个同步 */
 const TIMEOUT_MS = 20_000;
 
+/** 带 HTTP 状态的 GitHub 错误：404 才代表仓库真没了，403/5xx 只是暂时取不到 */
+class GitHubError extends Error {
+  constructor(
+    message: string,
+    readonly status: number
+  ) {
+    super(message);
+  }
+}
+
 /** 带认证头的 GitHub REST 请求 */
 async function githubGet<T>(path: string): Promise<T> {
   const res = await fetch(`${API}${path}`, {
@@ -105,7 +115,14 @@ async function githubGet<T>(path: string): Promise<T> {
     },
   });
   if (!res.ok) {
-    throw new Error(`GitHub API ${path} → ${res.status} ${res.statusText}`);
+    const rateLimited =
+      (res.status === 403 || res.status === 429) &&
+      res.headers.get("x-ratelimit-remaining") === "0";
+    throw new GitHubError(
+      `GitHub API ${path} → ${res.status} ${res.statusText}` +
+        (rateLimited ? "（配额用尽，设置 GITHUB_TOKEN 可提到 5000 次/小时）" : ""),
+      res.status
+    );
   }
   return (await res.json()) as T;
 }
@@ -192,7 +209,17 @@ function normalizeTags(raw: unknown): string[] {
   return [];
 }
 
-async function fetchRepoInfo(owner: string, repo: string): Promise<RepoInfo | null> {
+/**
+ * 上游仓库探测结果。区分「真没了」和「暂时取不到」很重要：
+ * 前者才该给存档技能打 upstreamGone（页面提示看的是存档副本），
+ * 后者（限流/网络抖动）只是这轮拿不到新鲜元数据，不能诬告人家删库。
+ */
+type RepoLookup =
+  | { kind: "ok"; info: RepoInfo }
+  | { kind: "missing" }
+  | { kind: "unavailable"; message: string };
+
+async function fetchRepoInfo(owner: string, repo: string): Promise<RepoLookup> {
   try {
     const data = await githubGet<{
       full_name?: string;
@@ -203,16 +230,20 @@ async function fetchRepoInfo(owner: string, repo: string): Promise<RepoInfo | nu
       pushed_at?: string | null;
     }>(`/repos/${owner}/${repo}`);
     return {
-      fullName: data.full_name ?? `${owner}/${repo}`,
-      description: data.description ?? "",
-      stars: data.stargazers_count ?? 0,
-      htmlUrl: data.html_url ?? "",
-      defaultBranch: data.default_branch ?? "main",
-      updatedAt: data.pushed_at ?? "",
+      kind: "ok",
+      info: {
+        fullName: data.full_name ?? `${owner}/${repo}`,
+        description: data.description ?? "",
+        stars: data.stargazers_count ?? 0,
+        htmlUrl: data.html_url ?? "",
+        defaultBranch: data.default_branch ?? "main",
+        updatedAt: data.pushed_at ?? "",
+      },
     };
   } catch (err) {
-    console.warn(`  ⚠️ 获取仓库信息失败，跳过：${(err as Error).message}`);
-    return null;
+    const status = err instanceof GitHubError ? err.status : 0;
+    if (status === 404 || status === 410) return { kind: "missing" };
+    return { kind: "unavailable", message: (err as Error).message };
   }
 }
 
@@ -361,6 +392,19 @@ function parseSkill(
   };
 }
 
+/** 读上一轮存进 DB 的存档判定（用于限流时沿用 upstreamGone，不误报删库） */
+function readRepoMirror(db: DatabaseSync, fullName: string): RepoMirror | null {
+  const row = db
+    .prepare(`SELECT mirror FROM repos WHERE full_name = ?`)
+    .get(fullName) as { mirror?: string | null } | undefined;
+  if (!row?.mirror) return null;
+  try {
+    return JSON.parse(row.mirror) as RepoMirror;
+  } catch {
+    return null;
+  }
+}
+
 /** 读取某个仓库的存档清单（没存档过返回 null） */
 function readManifest(fullName: string): MirrorManifest | null {
   const p = join(ROOT, vendorDir(fullName), "MIRROR.json");
@@ -434,7 +478,13 @@ async function sync(): Promise<void> {
     }
 
     // 存档型仓库：上游只用来刷新星数/描述，拿不到就用存档里的元数据快照兜底
-    const live = await fetchRepoInfo(owner, repo);
+    const lookup = await fetchRepoInfo(owner, repo);
+    if (lookup.kind === "missing") {
+      console.warn("  ⚠️ 上游仓库不存在（404，已删除或转私有）");
+    } else if (lookup.kind === "unavailable") {
+      console.warn(`  ⚠️ 上游暂时取不到：${lookup.message}`);
+    }
+    const live = lookup.kind === "ok" ? lookup.info : null;
     if (!live && !manifest) continue;
     const info: RepoInfo = live ?? {
       fullName: manifest!.repo,
@@ -444,15 +494,24 @@ async function sync(): Promise<void> {
       defaultBranch: manifest!.branch,
       updatedAt: manifest!.updatedAt,
     };
+    // 只有确认 404 才判定上游没了；限流/网络问题沿用上一轮的判定，避免误报
+    const prev = readRepoMirror(db, fullName);
     const mirror: RepoMirror | null = manifest
       ? {
           commit: manifest.commit,
           mirroredAt: manifest.mirroredAt,
-          upstreamGone: live === null,
+          upstreamGone:
+            lookup.kind === "missing"
+              ? true
+              : lookup.kind === "ok"
+                ? false
+                : (prev?.upstreamGone ?? false),
         }
       : null;
     if (mirror?.upstreamGone) {
-      console.log("  🗄️ 上游已无法访问 —— 用存档副本继续同步");
+      console.log("  🗄️ 上游已失效 —— 用存档副本继续同步");
+    } else if (manifest && lookup.kind !== "ok") {
+      console.log("  🗄️ 本轮用存档副本 + 上次的仓库元数据继续同步");
     }
     upsertRepo.run(
       info.fullName,

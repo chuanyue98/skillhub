@@ -43,6 +43,16 @@ interface Source {
   vendor?: boolean;
 }
 
+/** 带 HTTP 状态的 GitHub 错误：404 才代表仓库真没了，403/5xx 只是暂时取不到 */
+class GitHubError extends Error {
+  constructor(
+    message: string,
+    readonly status: number
+  ) {
+    super(message);
+  }
+}
+
 async function githubGet<T>(path: string): Promise<T> {
   const res = await fetch(`${API}${path}`, {
     signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -52,7 +62,16 @@ async function githubGet<T>(path: string): Promise<T> {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
-  if (!res.ok) throw new Error(`GitHub API ${path} → ${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    const rateLimited =
+      (res.status === 403 || res.status === 429) &&
+      res.headers.get("x-ratelimit-remaining") === "0";
+    throw new GitHubError(
+      `GitHub API ${path} → ${res.status} ${res.statusText}` +
+        (rateLimited ? "（配额用尽，设置 GITHUB_TOKEN 可提到 5000 次/小时）" : ""),
+      res.status
+    );
+  }
   return (await res.json()) as T;
 }
 
@@ -92,7 +111,13 @@ interface RepoHead {
   updatedAt: string;
 }
 
-async function fetchHead(fullName: string): Promise<RepoHead | null> {
+/** 上游探测结果：missing = 确认 404；unavailable = 限流/网络问题，别当成删库 */
+type HeadLookup =
+  | { kind: "ok"; head: RepoHead }
+  | { kind: "missing" }
+  | { kind: "unavailable"; message: string };
+
+async function fetchHead(fullName: string): Promise<HeadLookup> {
   try {
     const repo = await githubGet<{
       full_name?: string;
@@ -108,18 +133,22 @@ async function fetchHead(fullName: string): Promise<RepoHead | null> {
       `/repos/${fullName}/branches/${branch}`
     );
     return {
-      fullName: repo.full_name ?? fullName,
-      description: repo.description ?? "",
-      stars: repo.stargazers_count ?? 0,
-      htmlUrl: repo.html_url ?? `https://github.com/${fullName}`,
-      branch,
-      commit: br.commit?.sha ?? "",
-      license: repo.license?.spdx_id ?? null,
-      updatedAt: repo.pushed_at ?? "",
+      kind: "ok",
+      head: {
+        fullName: repo.full_name ?? fullName,
+        description: repo.description ?? "",
+        stars: repo.stargazers_count ?? 0,
+        htmlUrl: repo.html_url ?? `https://github.com/${fullName}`,
+        branch,
+        commit: br.commit?.sha ?? "",
+        license: repo.license?.spdx_id ?? null,
+        updatedAt: repo.pushed_at ?? "",
+      },
     };
   } catch (err) {
-    console.warn(`  ⚠️ 拉取上游信息失败：${(err as Error).message}`);
-    return null;
+    const status = err instanceof GitHubError ? err.status : 0;
+    if (status === 404 || status === 410) return { kind: "missing" };
+    return { kind: "unavailable", message: (err as Error).message };
   }
 }
 
@@ -165,8 +194,16 @@ function readManifest(fullName: string): MirrorManifest | null {
 /** 存档一个仓库：拉 tree → 规划文件 → 按 commit 下载 → 写盘 + 裁剪 + 写 MIRROR.json */
 async function vendorRepo(fullName: string): Promise<boolean> {
   console.log(`\n📦 ${fullName}`);
-  const head = await fetchHead(fullName);
-  if (!head) return false;
+  const lookup = await fetchHead(fullName);
+  if (lookup.kind !== "ok") {
+    console.warn(
+      lookup.kind === "missing"
+        ? "  ⚠️ 上游仓库不存在（404），无法存档"
+        : `  ⚠️ 拉取上游信息失败：${lookup.message}`
+    );
+    return false;
+  }
+  const head = lookup.head;
 
   let tree: TreeEntry[];
   try {
@@ -265,12 +302,14 @@ async function checkRepo(fullName: string): Promise<boolean> {
       ok = false;
     }
   }
-  const head = await fetchHead(fullName);
-  if (!head) {
-    console.log(`  🗄️  上游已不可访问 —— 存档副本仍在（${manifest.files.length} 个文件）`);
-  } else if (head.commit !== manifest.commit) {
+  const lookup = await fetchHead(fullName);
+  if (lookup.kind === "missing") {
+    console.log(`  🗄️  上游仓库已消失（404）—— 存档副本仍在（${manifest.files.length} 个文件）`);
+  } else if (lookup.kind === "unavailable") {
+    console.log(`  ⏸️  上游本次取不到（${lookup.message}）—— 未做版本比对，存档文件已校验`);
+  } else if (lookup.head.commit !== manifest.commit) {
     console.log(
-      `  ⬆️  上游已更新：${manifest.commit.slice(0, 7)} → ${head.commit.slice(0, 7)}（重新运行 npm run vendor 更新存档）`
+      `  ⬆️  上游已更新：${manifest.commit.slice(0, 7)} → ${lookup.head.commit.slice(0, 7)}（重新运行 npm run vendor 更新存档）`
     );
   } else {
     console.log(`  ✅ 存档与上游一致 @ ${manifest.commit.slice(0, 7)}，${manifest.files.length} 个文件校验通过`);
