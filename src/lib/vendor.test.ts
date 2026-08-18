@@ -84,6 +84,15 @@ test("vendorPath / archiveUrl 指向 SkillHub 仓库里的存档位置", () => {
   );
 });
 
+test("SKILL.md 在仓库根时，存档路径/链接不带多余的 . 段", () => {
+  assert.equal(vendorPath("owner/repo", "."), "vendored/owner/repo");
+  assert.equal(vendorPath("owner/repo", ""), "vendored/owner/repo");
+  assert.equal(
+    archiveUrl("owner/repo", ".", "me/hub"),
+    "https://github.com/me/hub/tree/main/vendored/owner/repo"
+  );
+});
+
 const manifest = (commit: string, paths: string[]): MirrorManifest => ({
   repo: "owner/repo",
   htmlUrl: "https://github.com/owner/repo",

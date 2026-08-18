@@ -42,5 +42,10 @@
     "repo": "chengyi-ai/native-subtitle-quote-image",
     "vendor": true,
     "note": "chengyi-ai：视频内嵌字幕取帧 + 3:4 长图（零散小仓库，已存档进本仓库）"
+  },
+  {
+    "repo": "geeklee/srt-whiteboard-animation",
+    "vendor": true,
+    "note": "geeklee：SRT 字幕 → 白板手绘动画（零散小仓库，已存档进本仓库）"
   }
 ]

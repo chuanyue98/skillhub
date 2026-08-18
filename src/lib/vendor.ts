@@ -128,9 +128,13 @@ export function vendorDir(repoFullName: string): string {
   return `${VENDOR_ROOT}/${repoFullName}`;
 }
 
-/** 存档文件在 SkillHub 仓库里的路径 */
+/**
+ * 存档文件在 SkillHub 仓库里的路径。
+ * path 为空或 "."（SKILL.md 就在仓库根）时直接返回存档根目录，避免拼出 ".../." 这种坏链接。
+ */
 export function vendorPath(repoFullName: string, path: string): string {
-  return `${vendorDir(repoFullName)}/${path}`;
+  const rel = path === "" || path === "." ? "" : path;
+  return rel ? `${vendorDir(repoFullName)}/${rel}` : vendorDir(repoFullName);
 }
 
 /** 「浏览存档文件」链接：指向 SkillHub 仓库里的存档目录 */
