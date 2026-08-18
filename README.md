@@ -75,7 +75,7 @@ Vercel Redis（KV）── 复制计数与热榜的实时存储
 | 来源信誉 | 15 | 仓库星数（5）、仓库描述（5）、近期活跃（5） |
 
 等级：A ≥ 85，B ≥ 70，C ≥ 50，D < 50。权重集中在 `src/lib/score.ts`，调整后重新 `npm run sync` 即可。
-- **内容拉取走 raw 域名**：不受 GitHub API 速率限制；仓库元数据 API 未认证时 60 次/小时，设置 `GITHUB_TOKEN` 提升到 5000 次/小时。
+- **内容拉取走 raw 域名**：不受 GitHub API 速率限制；仓库元数据 API 匿名 60 次/小时，认证后 5000 次/小时（脚本自动复用 `gh` 登录态）。
 
 ## 快速开始
 
@@ -87,10 +87,21 @@ npm run dev      # 本地开发 http://localhost:3000
 
 改动了 `sources.json`（增删仓库）后重新 `npm run sync` 即可。
 
+### GitHub 认证（配额）
+
+仓库元数据与目录树走 GitHub REST API，匿名只有 **60 次/小时**（一次全量 sync 就要 2 次 × 仓库数）。脚本按顺序自动取 token：
+
+1. `GITHUB_TOKEN` 环境变量（CI 用）
+2. 本机 `gh` CLI 的登录态（`gh auth token`）——**本地开发什么都不用配，`gh auth login` 过就行**
+3. 都没有 → 匿名 60 次/小时
+
+拿到 token 后配额 5000 次/小时。技能正文与存档文件走 `raw.githubusercontent.com`，不占这个配额。
+
 ### 同步脚本
 
 ```bash
-GITHUB_TOKEN=ghp_xxx npm run sync   # 建议设置，未设置会按 60 次/小时配额运行
+npm run sync                        # 认证自动走 gh CLI
+GITHUB_TOKEN=ghp_xxx npm run sync   # 或显式指定 token
 ```
 
 `scripts/sync.ts` 的行为：
@@ -150,7 +161,7 @@ npm run build    # serverless 构建（含 API 路由）
 
 字段：`official` 打官方徽章；`vendor: true` 表示存档进本仓库（先跑 `npm run vendor` 生成 `vendored/`，再 `npm run sync`）。
 
-然后 `npm run sync`（注意 GitHub API 未认证配额 60 次/小时，设置 `GITHUB_TOKEN` 可提升到 5000 次/小时）。
+然后 `npm run sync`（认证见上面「GitHub 认证（配额）」，本机装了 `gh` 就自动用它的登录态）。
 
 ## REST API
 
@@ -245,6 +256,7 @@ skillhub/
 ├── sources.json              # 聚合的 GitHub 仓库列表（official 标记官方源，vendor 标记存档源）
 ├── scripts/sync.ts           # 抓取 → 解析 → SQLite → JSON 快照（含评分/分类/安全扫描）
 ├── scripts/vendor.ts         # 零散仓库存档：按 commit 镜像技能目录 → vendored/ + MIRROR.json
+├── scripts/token.ts          # GitHub 认证：GITHUB_TOKEN → gh CLI 登录态 → 匿名
 ├── vendored/<owner>/<repo>/  # 存档副本（技能文件 + LICENSE + MIRROR.json 校验清单，随仓库提交）
 ├── data/skills.db            # 本地 SQLite（gitignore，不入库）
 ├── public/data/skills.json   # 元数据快照（无正文，列表页数据源，随仓库提交）

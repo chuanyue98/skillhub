@@ -29,11 +29,14 @@ import {
   type TreeEntry,
 } from "../src/lib/vendor";
 
+import { logAuth, resolveToken } from "./token";
+
 const ROOT = join(import.meta.dirname, "..");
 const SOURCES_PATH = join(ROOT, "sources.json");
 const API = "https://api.github.com";
 const TIMEOUT_MS = 20_000;
-const token = process.env.GITHUB_TOKEN;
+const auth = resolveToken();
+const token = auth.token;
 
 interface Source {
   repo: string;
@@ -351,7 +354,7 @@ async function main(): Promise<void> {
     console.log("ℹ️ 没有需要存档的仓库（在 sources.json 里给零散仓库加 \"vendor\": true）");
     return;
   }
-  if (!token) console.log("ℹ️ 未设置 GITHUB_TOKEN：API 按 60 次/小时未认证配额");
+  logAuth(auth);
 
   let ok = 0;
   for (const repo of targets) {

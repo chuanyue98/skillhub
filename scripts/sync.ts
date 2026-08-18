@@ -31,6 +31,8 @@ import {
   type MirrorManifest,
 } from "../src/lib/vendor";
 
+import { logAuth, resolveToken } from "./token";
+
 const ROOT = join(import.meta.dirname, "..");
 const DB_PATH = join(ROOT, "data", "skills.db");
 const OUT_PATH = join(ROOT, "public", "data", "skills.json");
@@ -89,7 +91,8 @@ interface RepoMirror {
   upstreamGone: boolean;
 }
 
-const token = process.env.GITHUB_TOKEN;
+const auth = resolveToken();
+const token = auth.token;
 
 /** 单请求超时，防止某个连接挂起拖死整个同步 */
 const TIMEOUT_MS = 20_000;
@@ -431,9 +434,7 @@ async function sync(): Promise<void> {
     console.error("❌ sources.json 为空，先添加要聚合的仓库");
     process.exit(1);
   }
-  if (!token) {
-    console.log("ℹ️ 未设置 GITHUB_TOKEN：仓库 API 按 60 次/小时未认证配额；内容走 raw 不限流");
-  }
+  logAuth(auth);
 
   const db = openDb();
   const now = new Date().toISOString();
