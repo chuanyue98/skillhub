@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { SkillSnapshot } from "@/lib/types";
@@ -22,6 +22,20 @@ const SORT_OPTIONS: [SortKey, string][] = [
 /** 每页展示的技能数（4 列 × 6 行） */
 const PAGE_SIZE = 24;
 
+/** 页码窗口：始终含首末页与当前页 ±1，间隔折叠成省略号；页数少时全量显示 */
+function pageWindow(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const out: (number | "…")[] = [];
+  for (let p = 1; p <= total; p++) {
+    if (p === 1 || p === total || Math.abs(p - current) <= 1) {
+      out.push(p);
+    } else if (out[out.length - 1] !== "…") {
+      out.push("…");
+    }
+  }
+  return out;
+}
+
 export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,6 +47,31 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
   const [sortBy, setSortBy] = useState<SortKey>("score");
   const [page, setPage] = useState(1);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // ⌘K / Ctrl+K 或 / 聚焦搜索框（输入框内按 / 不拦截）；Esc 清空
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      const inEditable =
+        !!el &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT" ||
+          el.isContentEditable);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      } else if (e.key === "/" && !inEditable) {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // 拉取全量复制计数（供热度排序）
   useEffect(() => {
@@ -210,6 +249,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
               <path d="m10.5 10.5 3 3" strokeLinecap="round" />
             </svg>
             <input
+              ref={inputRef}
               type="search"
               name="q"
               autoComplete="off"
@@ -219,9 +259,23 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
                 setQuery(e.target.value);
                 setPage(1);
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  if (query) setQuery("");
+                  else inputRef.current?.blur();
+                }
+              }}
               placeholder={t("search.placeholder")}
-              className="w-full rounded-xl border border-hairline-strong bg-surface py-3.5 pl-10 pr-4 text-sm text-ink placeholder-ink-3 outline-none transition focus:border-signal focus:shadow-[0_0_0_3px_rgba(14,122,74,0.12)]"
+              className={`w-full rounded-xl border border-hairline-strong bg-surface py-3.5 pl-10 text-sm text-ink placeholder-ink-3 outline-none transition focus:border-signal focus:shadow-[0_0_0_3px_rgba(14,122,74,0.12)] ${
+                query ? "pr-4" : "pr-16"
+              }`}
             />
+            {!query && (
+              <kbd className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-0.5 rounded-md border border-hairline bg-paper px-1.5 py-0.5 font-mono text-[10px] font-semibold text-ink-3">
+                <span>⌘K</span>
+                <span className="opacity-50">/</span>
+              </kbd>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             {/* 仓库筛选 */}
@@ -271,8 +325,10 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
         </div>
       </section>
 
-      {/* 热榜 */}
-      <TrendingSection skills={skills} />
+      {/* 热榜（有搜索/筛选时让位给结果区） */}
+      {!query.trim() && !activeTag && !activeRepo && (
+        <TrendingSection skills={skills} />
+      )}
 
       {/* 结果区 */}
       <section id="results" className="flex scroll-mt-6 flex-col gap-3">
@@ -343,7 +399,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
 
         {totalPages > 1 && (
           <nav
-            className="flex items-center justify-center gap-3 pt-3"
+            className="flex flex-wrap items-center justify-center gap-1.5 pt-3"
             aria-label="分页"
           >
             <button
@@ -353,9 +409,30 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
             >
               {t("pagination.prev")}
             </button>
-            <span className="font-mono text-xs text-ink-2">
-              {safePage} / {totalPages}
-            </span>
+            {pageWindow(safePage, totalPages).map((p, i) =>
+              p === "…" ? (
+                <span
+                  key={`e-${i}`}
+                  aria-hidden="true"
+                  className="px-1 font-mono text-xs text-ink-3"
+                >
+                  …
+                </span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => goToPage(p)}
+                  aria-current={p === safePage ? "page" : undefined}
+                  className={`min-w-7 rounded-md border px-2 py-1.5 font-mono text-xs font-semibold transition ${
+                    p === safePage
+                      ? "border-ink bg-ink text-paper"
+                      : "border-hairline bg-surface text-ink-2 hover:border-signal/50 hover:text-signal"
+                  }`}
+                >
+                  {p}
+                </button>
+              )
+            )}
             <button
               onClick={() => goToPage(safePage + 1)}
               disabled={safePage >= totalPages}

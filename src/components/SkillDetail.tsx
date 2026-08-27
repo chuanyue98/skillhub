@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -37,6 +38,50 @@ const SCORE_LABEL_KEYS: Record<string, string> = {
   仓库描述: "score.repoDesc",
   近期活跃: "score.recency",
 };
+
+/** 从 ReactMarkdown 渲染的 pre 子树里递归提取纯文本，供复制 */
+function extractText(node: ReactNode): string {
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(extractText).join("");
+  if (typeof node === "object" && "props" in node) {
+    return extractText((node as { props: { children?: ReactNode } }).props.children);
+  }
+  return "";
+}
+
+/** 代码块：右上角复制按钮（浮在深色 pre 上，触屏也保持可见） */
+function CodeBlock({ children }: { children?: ReactNode }) {
+  const { t } = useLang();
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(extractText(children).trimEnd());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // 剪贴板不可用时静默失败
+    }
+  };
+
+  return (
+    <div className="group relative">
+      <button
+        onClick={copy}
+        aria-label={`${t("copy.tooltip")}${extractText(children).trim().slice(0, 60)}`}
+        className={`absolute right-2 top-2 z-10 rounded-md border px-2 py-1 font-mono text-[10px] font-semibold backdrop-blur transition ${
+          copied
+            ? "border-signal/50 bg-signal/20 text-emerald-200"
+            : "border-white/15 bg-white/10 text-slate-300 opacity-60 hover:bg-white/20 hover:opacity-100 focus-visible:opacity-100"
+        }`}
+      >
+        {copied ? t("copy.copied") : t("copy.copy")}
+      </button>
+      <pre>{children}</pre>
+    </div>
+  );
+}
 
 export default function SkillDetail({
   skill,
@@ -174,7 +219,12 @@ export default function SkillDetail({
 
           <div className="rounded-xl border border-hairline bg-surface px-5 py-6 sm:px-8 sm:py-8">
             <div className="markdown-body">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{ pre: CodeBlock }}
+              >
+                {body}
+              </ReactMarkdown>
             </div>
           </div>
 
