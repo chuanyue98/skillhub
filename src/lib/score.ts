@@ -23,7 +23,7 @@ export interface ScoreInput {
 /** description 里出现这些词说明描述是占位/模板，不是真内容 */
 const PLACEHOLDER_RE = /(todo|tbd|lorem|placeholder|fixme|待补充|占位|xxx)/i;
 
-/** 行为动词：描述里含这些词说明说明了「能干什么」 */
+/** 行为动词：描述里含这些词说明说明了「能干什么」（英文，按整词匹配） */
 const ACTION_VERBS = [
   "use",
   "create",
@@ -47,6 +47,35 @@ const ACTION_VERBS = [
   "help",
 ];
 
+/** 中文行为动词：让中文技能在「描述说明用途」上不被系统性扣分（子串匹配） */
+const ACTION_VERBS_ZH = [
+  "生成",
+  "创建",
+  "分析",
+  "提取",
+  "转换",
+  "总结",
+  "搜索",
+  "撰写",
+  "编写",
+  "制作",
+  "管理",
+  "测试",
+  "部署",
+  "扫描",
+  "重构",
+  "读取",
+  "翻译",
+  "整理",
+  "排版",
+  "剪辑",
+  "画图",
+  "起号",
+  "定位",
+  "拆",
+  "做",
+];
+
 /** 版本号是 semver 才算规范 */
 const SEMVER_RE = /^\d+\.\d+\.\d+(-[0-9a-zA-Z.-]+)?(\+[0-9a-zA-Z.-]+)?$/;
 
@@ -57,12 +86,15 @@ export function scoreLevel(total: number): ScoreLevel {
   return "D";
 }
 
+/** 按 Unicode 码点计数，中文/emoji 都算一个字符（避免 length 把代理对算成 2） */
+const chars = (s: string): number => Array.from(s.trim()).length;
+
 export function scoreSkill(input: ScoreInput): SkillScore {
   const items: ScoreItem[] = [];
   const { description, body, tags, version, repoStars, repoUpdatedAt } = input;
 
   // ── description 质量（30）──────────────────────────────
-  const descLen = description.length;
+  const descLen = chars(description);
   items.push({
     label: "描述长度",
     max: 15,
@@ -77,9 +109,9 @@ export function scoreSkill(input: ScoreInput): SkillScore {
     max: 10,
     points: isPlaceholder ? 0 : 10,
   });
-  const hasVerb = ACTION_VERBS.some((v) =>
-    new RegExp(`\\b${v}\\w*`, "i").test(description)
-  );
+  const hasVerb =
+    ACTION_VERBS.some((v) => new RegExp(`\\b${v}\\b`, "i").test(description)) ||
+    ACTION_VERBS_ZH.some((v) => description.includes(v));
   items.push({
     label: "描述说明用途",
     max: 5,
@@ -115,7 +147,7 @@ export function scoreSkill(input: ScoreInput): SkillScore {
     max: 13,
     points: body.includes("```") ? 13 : 0,
   });
-  const bodyLen = body.length;
+  const bodyLen = chars(body);
   items.push({
     label: "正文篇幅",
     max: 10,

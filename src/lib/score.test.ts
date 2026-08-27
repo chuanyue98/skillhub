@@ -79,6 +79,25 @@ test("描述：描述等于技能名视为占位", () => {
   assert.equal(item?.points, 0);
 });
 
+test("中文描述：行为动词子串匹配，能拿到「描述说明用途」分", () => {
+  const s = scoreSkill(
+    base({
+      description: "分析公众号爆款文章，生成可复用的标题与正文模板，辅助内容创作。",
+    })
+  );
+  const item = s.items.find((i) => i.label === "描述说明用途");
+  assert.equal(item?.points, 5);
+});
+
+test("中文描述：不被英文整词匹配误伤（user 不再算含 use）", () => {
+  const s = scoreSkill(
+    base({ description: "这个技能面向普通用户，帮助整理笔记" })
+  );
+  // 含中文动词「整理/帮助」→ 仍应得用途分，且不依赖英文 use 误匹配
+  const item = s.items.find((i) => i.label === "描述说明用途");
+  assert.equal(item?.points, 5);
+});
+
 test("描述长度档位：20/60/120 字符", () => {
   const s20 = scoreSkill(base({ description: "x".repeat(20) }));
   const s60 = scoreSkill(base({ description: "x".repeat(60) }));
