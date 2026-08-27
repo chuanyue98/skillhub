@@ -44,6 +44,12 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* 原生下拉：打开的选项列表固定浅色，不继承 select 本身的选中态配色 */
+select option {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}
+
 ::selection {
   background: var(--color-signal-soft);
   color: var(--color-ink);

@@ -110,7 +110,7 @@ export default function BrowsePage({ skills }: { skills: SkillSnapshot[] }) {
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
         {/* 分类侧栏（桌面吸顶；移动端横向滚动 chips） */}
         <nav
-          aria-label="技能分类"
+          aria-label={t("browse.catAria")}
           className="flex shrink-0 gap-1.5 overflow-x-auto pb-1 lg:sticky lg:top-6 lg:w-52 lg:flex-col lg:overflow-visible lg:pb-0"
         >
           <button
@@ -168,7 +168,7 @@ export default function BrowsePage({ skills }: { skills: SkillSnapshot[] }) {
               onChange={(e) => setActiveRepo(e.target.value || null)}
               className={`max-w-full cursor-pointer rounded-full border px-2.5 py-1 text-xs transition ${
                 activeRepo
-                  ? "border-signal bg-signal text-white"
+                  ? "border-signal/50 bg-signal-soft text-signal"
                   : "border-hairline bg-surface text-ink-2 hover:border-signal/50 hover:text-signal"
               }`}
             >

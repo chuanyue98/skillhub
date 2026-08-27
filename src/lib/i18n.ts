@@ -15,6 +15,9 @@ const zh: Record<string, string> = {
   "hero.subtitle":
     "聚合 GitHub 上的开源 Agent Skills（SKILL.md）。搜索、预览，一键装进你的 agent。",
   "search.placeholder": "搜索技能名、描述、标签、仓库…",
+  "search.aria": "搜索技能",
+  "sort.aria": "排序方式",
+  "pagination.aria": "分页",
   "filter.repo": "仓库",
   "filter.repoAll": "全部仓库",
   // 排序
@@ -32,6 +35,7 @@ const zh: Record<string, string> = {
   "empty.reset": "清除筛选",
   // 热榜
   "trending.title": "🔥 本周热榜",
+  "trending.aria": "本周热榜",
   "trending.sub": "近 7 天复制次数",
   "trending.times": "次",
   // 卡片
@@ -47,6 +51,7 @@ const zh: Record<string, string> = {
   "browse.title": "按主题浏览",
   "browse.subtitle": "按职业/主题归类，快速找到你需要的技能。",
   "browse.all": "全部",
+  "browse.catAria": "技能分类",
   "browse.countSkills": "{n} 个技能",
   "browse.empty": "该分类暂无技能。",
   "browse.viewAll": "查看全部",
@@ -129,6 +134,9 @@ const en: Record<string, string> = {
   "hero.subtitle":
     "Aggregating open-source Agent Skills (SKILL.md) from GitHub. Search, preview, and install into your agent in one click.",
   "search.placeholder": "Search name, description, tag, repo…",
+  "search.aria": "Search skills",
+  "sort.aria": "Sort order",
+  "pagination.aria": "Pagination",
   "filter.repo": "Repo",
   "filter.repoAll": "All repos",
   "sort.score": "Score",
@@ -142,6 +150,7 @@ const en: Record<string, string> = {
   "empty.desc": "No skills match. Try another keyword or clear the filters.",
   "empty.reset": "Clear filters",
   "trending.title": "🔥 Trending This Week",
+  "trending.aria": "Trending this week",
   "trending.sub": "Copies in the last 7 days",
   "trending.times": "times",
   "card.noDesc": "(no description)",
@@ -154,6 +163,7 @@ const en: Record<string, string> = {
   "browse.title": "Browse by Topic",
   "browse.subtitle": "Grouped by role and topic, find the skill you need fast.",
   "browse.all": "All",
+  "browse.catAria": "Skill categories",
   "browse.countSkills": "{n} skills",
   "browse.empty": "No skills in this category yet.",
   "browse.viewAll": "View all",

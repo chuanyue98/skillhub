@@ -24,7 +24,7 @@ export default function SkillCard({
   const href = `/skill/${skill.repo.fullName}/${skill.name}`;
   const { t, lang } = useLang();
   return (
-    <article className="group flex flex-col gap-3 rounded-xl border border-hairline bg-surface p-4 transition hover:-translate-y-0.5 hover:border-signal/40 hover:shadow-[0_6px_24px_rgba(14,122,74,0.08)] [content-visibility:auto] [contain-intrinsic-size:auto_190px]">
+    <article className="group relative flex flex-col gap-3 rounded-xl border border-hairline bg-surface p-4 transition hover:-translate-y-0.5 hover:border-signal/40 hover:shadow-[0_6px_24px_rgba(14,122,74,0.08)] [content-visibility:auto] [contain-intrinsic-size:auto_190px]">
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <ScoreBadge score={skill.score} />
@@ -33,7 +33,7 @@ export default function SkillCard({
           <Link
             href={href}
             translate="no"
-            className="truncate font-mono text-sm font-bold text-ink transition group-hover:text-signal"
+            className="truncate font-mono text-sm font-bold text-ink transition group-hover:text-signal after:absolute after:inset-0 after:content-['']"
           >
             {skill.name}
           </Link>
@@ -82,7 +82,7 @@ export default function SkillCard({
         <span translate="no" className="truncate font-mono text-[10px] text-ink-3">
           {skill.repo.fullName}
         </span>
-        <span className="flex shrink-0 items-center gap-1.5">
+        <span className="relative z-10 flex shrink-0 items-center gap-1.5">
           {count > 0 && (
             <span
               title={t("card.copiedTitle")}

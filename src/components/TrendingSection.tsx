@@ -35,7 +35,7 @@ export default function TrendingSection({
   if (ranked.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-3" aria-label="本周热榜">
+    <section className="flex flex-col gap-3" aria-label={t("trending.aria")}>
       <div className="flex items-center gap-2">
         <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-signal">
           {t("trending.title")}

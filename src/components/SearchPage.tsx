@@ -48,6 +48,12 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
   const [page, setPage] = useState(1);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const inputRef = useRef<HTMLInputElement>(null);
+  const [modKey, setModKey] = useState("⌘");
+
+  // 非 macOS 显示 Ctrl 而不是 ⌘
+  useEffect(() => {
+    if (!/mac|iphone|ipad|ipod/i.test(navigator.userAgent)) setModKey("Ctrl");
+  }, []);
 
   // ⌘K / Ctrl+K 或 / 聚焦搜索框（输入框内按 / 不拦截）；Esc 清空
   useEffect(() => {
@@ -253,7 +259,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
               type="search"
               name="q"
               autoComplete="off"
-              aria-label="搜索技能"
+              aria-label={t("search.aria")}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -272,7 +278,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
             />
             {!query && (
               <kbd className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-0.5 rounded-md border border-hairline bg-paper px-1.5 py-0.5 font-mono text-[10px] font-semibold text-ink-3">
-                <span>⌘K</span>
+                <span>{modKey} K</span>
                 <span className="opacity-50">/</span>
               </kbd>
             )}
@@ -288,7 +294,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
               }}
               className={`max-w-full cursor-pointer rounded-full border px-2.5 py-1 text-xs transition ${
                 activeRepo
-                  ? "border-signal bg-signal text-white"
+                  ? "border-signal/50 bg-signal-soft text-signal"
                   : "border-hairline bg-surface text-ink-2 hover:border-signal/50 hover:text-signal"
               }`}
             >
@@ -352,12 +358,15 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
           <div
             className="flex items-center gap-0.5 rounded-lg border border-hairline bg-surface p-0.5"
             role="group"
-            aria-label="排序方式"
+            aria-label={t("sort.aria")}
           >
             {SORT_OPTIONS.map(([key, labelKey]) => (
               <button
                 key={key}
-                onClick={() => setSortBy(key)}
+                onClick={() => {
+                  setSortBy(key);
+                  setPage(1);
+                }}
                 aria-pressed={sortBy === key}
                 className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
                   sortBy === key
@@ -400,7 +409,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
         {totalPages > 1 && (
           <nav
             className="flex flex-wrap items-center justify-center gap-1.5 pt-3"
-            aria-label="分页"
+            aria-label={t("pagination.aria")}
           >
             <button
               onClick={() => goToPage(safePage - 1)}
