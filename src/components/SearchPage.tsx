@@ -401,6 +401,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
                 skill={s}
                 count={counts[s.id] ?? 0}
                 rank={ranks.get(s.id)}
+                query={query}
               />
             ))}
           </div>
