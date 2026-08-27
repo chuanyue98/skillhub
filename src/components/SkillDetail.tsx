@@ -10,6 +10,7 @@ import type {
   SkillScore,
   SkillSecurity,
 } from "@/lib/types";
+import { tagLabel } from "@/lib/i18n";
 import InstallCommand from "./InstallCommand";
 import ScoreBadge from "./ScoreBadge";
 import CopyCount from "./CopyCount";
@@ -137,7 +138,7 @@ export default function SkillDetail({
                     key={tag}
                     className="rounded bg-signal-soft px-2 py-0.5 font-mono text-[11px] text-signal"
                   >
-                    {tag}
+                    {tagLabel(lang, tag)}
                   </span>
                 ))}
               </div>

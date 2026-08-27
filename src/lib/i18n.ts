@@ -225,6 +225,64 @@ const en: Record<string, string> = {
 
 export const messages: Record<Lang, Record<string, string>> = { zh, en };
 
+/**
+ * 标签展示文案：标签是 SKILL.md 里的自由 taxonomy，同时作为筛选 key（?tag=xxx）
+ * 和 URL 的一部分，不能改底层值。这里只做「展示层」翻译，筛选/URL 仍用原始英文。
+ * 未收录的标签回退原文（英文），所以中文界面会混排「已翻译 + 原文」，属预期行为。
+ */
+export const TAG_LABELS: Record<Lang, Record<string, string>> = {
+  zh: {
+    commercial: "商业",
+    bizops: "商业运营",
+    orchestrator: "编排调度",
+    "research-ops": "研究运营",
+    "design-system": "设计系统",
+    process: "流程",
+    vendor: "供应商/采购",
+    capacity: "产能",
+    sop: "SOP 标准流程",
+    reliability: "可靠性",
+    sre: "站点可靠性工程",
+    observability: "可观测性",
+    testing: "测试",
+    engineering: "工程",
+    devops: "DevOps",
+    product: "产品",
+    "product-management": "产品管理",
+    growth: "增长",
+    brand: "品牌",
+    seo: "SEO",
+    content: "内容",
+    marketing: "营销",
+    finance: "财务",
+    research: "研究",
+    "market-research": "市场研究",
+    compliance: "合规",
+    audit: "审计",
+    risk: "风险",
+    security: "安全",
+    productivity: "效率",
+    "knowledge-management": "知识管理",
+    documentation: "文档",
+    wiki: "维基",
+    operations: "运营",
+    sales: "销售",
+    partnerships: "合作",
+    pricing: "定价",
+    procurement: "采购",
+    "customer-success": "客户成功",
+    leadership: "领导力",
+    strategy: "战略",
+  },
+  en: {},
+};
+
+/** 取标签的展示文案：中文界面走翻译表，英文界面/未收录标签回退原文 */
+export function tagLabel(lang: Lang, tag: string): string {
+  if (lang === "en") return tag;
+  return TAG_LABELS.zh[tag] ?? tag;
+}
+
 /** 按 key 取文案，支持 {var} 占位替换 */
 export function translate(
   lang: Lang,

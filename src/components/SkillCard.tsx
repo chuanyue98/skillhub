@@ -7,6 +7,7 @@ import ScoreBadge from "./ScoreBadge";
 import OfficialBadge from "./OfficialBadge";
 import ArchivedBadge from "./ArchivedBadge";
 import { useLang } from "./LangProvider";
+import { tagLabel } from "@/lib/i18n";
 
 /** 技能卡片：评分徽章 + 名字 + 描述 + 标签 + 仓库 + 复制计数/按钮 */
 export default function SkillCard({
@@ -21,7 +22,7 @@ export default function SkillCard({
   rank?: number;
 }) {
   const href = `/skill/${skill.repo.fullName}/${skill.name}`;
-  const { t } = useLang();
+  const { t, lang } = useLang();
   return (
     <article className="group flex flex-col gap-3 rounded-xl border border-hairline bg-surface p-4 transition hover:-translate-y-0.5 hover:border-signal/40 hover:shadow-[0_6px_24px_rgba(14,122,74,0.08)] [content-visibility:auto] [contain-intrinsic-size:auto_190px]">
       <div className="flex items-start justify-between gap-2">
@@ -66,7 +67,7 @@ export default function SkillCard({
               key={tag}
               className="rounded bg-signal-soft px-1.5 py-0.5 font-mono text-[10px] text-signal"
             >
-              {tag}
+              {tagLabel(lang, tag)}
             </span>
           ))}
           {skill.tags.length > 4 && (

@@ -8,6 +8,7 @@ import { fetchCopyCounts } from "@/lib/counts";
 import TrendingSection from "./TrendingSection";
 import SkillCard from "./SkillCard";
 import { useLang } from "./LangProvider";
+import { tagLabel } from "@/lib/i18n";
 import LangToggle from "./LangToggle";
 
 type SortKey = "score" | "stars" | "copies";
@@ -24,7 +25,7 @@ const PAGE_SIZE = 24;
 export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -260,7 +261,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
                       : "border-hairline bg-surface text-ink-2 hover:border-signal/50 hover:text-signal"
                   }`}
                 >
-                  {tag}
+                  {tagLabel(lang, tag)}
                   <span className="ml-1 font-mono text-[10px] opacity-60">
                     {count}
                   </span>
@@ -283,7 +284,7 @@ export default function SearchPage({ skills }: { skills: SkillSnapshot[] }) {
                 {` · “${query.trim()}”`}
               </>
             )}
-            {activeTag && <> · #{activeTag}</>}
+            {activeTag && <> · #{tagLabel(lang, activeTag)}</>}
             {activeRepo && <> · {activeRepo}</>}
             {totalPages > 1 && (
               <>
