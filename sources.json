@@ -52,5 +52,10 @@
     "repo": "derek-zhuolin/VideoHand",
     "vendor": true,
     "note": "derek-zhuolin：手绘风视频/白板动画工具链（零散小仓库，已存档进本仓库）"
+  },
+  {
+    "repo": "SpaceZephyr/creator-buddy",
+    "vendor": true,
+    "note": "SpaceZephyr：跨平台内容创作技能箱（公众号/小红书/视频，约 30 个 SKILL）"
   }
 ]

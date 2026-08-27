@@ -67,7 +67,7 @@ export const CATEGORIES: Category[] = [
     descriptionEn: "Content, growth, brand and acquisition",
     priority: 20,
     match: (s) =>
-      inRepos(s, ["coreyhaines31/marketingskills"]) ||
+      inRepos(s, ["coreyhaines31/marketingskills", "SpaceZephyr/creator-buddy"]) ||
       inDirs(s, ["marketing-skill", "marketing"]) ||
       inSubdirs(s, ["skills/marketing", "skills/marketing-skill"]) ||
       hasTag(s, ["marketing", "growth", "brand", "seo", "content"]),

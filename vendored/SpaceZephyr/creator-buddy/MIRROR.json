@@ -1,0 +1,703 @@
+{
+  "repo": "SpaceZephyr/creator-buddy",
+  "htmlUrl": "https://github.com/SpaceZephyr/creator-buddy",
+  "branch": "main",
+  "commit": "edf46c567ff54b72ee2157d06f3a02dbd67aaa9c",
+  "description": "Creator Buddy: orchestrated Agent Skills for cross-platform content search, creator analysis, and viral trend research",
+  "stars": 775,
+  "license": null,
+  "updatedAt": "2026-08-26T08:49:06Z",
+  "mirroredAt": "2026-08-27T02:48:36.075Z",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 158,
+      "sha256": "921151bd6dd3b0d689cd4bf71b9ff4f46ae1507c7e7f8835b6ad8e0c89c7adac"
+    },
+    {
+      "path": "gzh-Skills/baokuan-article-analysis/agents/openai.yaml",
+      "bytes": 251,
+      "sha256": "d1d673a349fcdfe3092f39fe20df298fe80a909bd7e758006bfb69ff8fe69a6d"
+    },
+    {
+      "path": "gzh-Skills/baokuan-article-analysis/references/default-sectors.json",
+      "bytes": 377,
+      "sha256": "8ab7ead802cf8d0abdab70cf8a63ca0ee0dbf6e8f942152c5348e57b70e01b9c"
+    },
+    {
+      "path": "gzh-Skills/baokuan-article-analysis/scripts/daily_sector_trends.py",
+      "bytes": 37129,
+      "sha256": "11968396602890ee697f5f0f39b1f5625c2a4e5eca7512172d195653e9b4e8fb"
+    },
+    {
+      "path": "gzh-Skills/baokuan-article-analysis/SKILL.md",
+      "bytes": 3496,
+      "sha256": "db1e97e1629391e32b24617a424bd45b2c65ac9bcf82934f7f59874025ad604b"
+    },
+    {
+      "path": "gzh-Skills/baokuan-title-generator/SKILL.md",
+      "bytes": 14815,
+      "sha256": "f8e13dc03fa7a908d10e2aea527b7ebe044a1ce08e8c447cb6077901c92714cf"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/_meta.json",
+      "bytes": 115,
+      "sha256": "13abaddf749ea10f8e582cdb5ae3b5ad053a3b73679da470335d859bc8b2533a"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/package.json",
+      "bytes": 732,
+      "sha256": "1bec0d6be6056dc8f8a43bae3c592e76749bb495092f13bcecab4388cd9e86c4"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/references/changelog.md",
+      "bytes": 1954,
+      "sha256": "437bc82363b179f80502bf175055015d758cee2fab3602149f733d72f164f3ba"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/references/options.md",
+      "bytes": 3042,
+      "sha256": "f286113c969618247e2c763668a8e6bc6b0da62e43962897ae82221e675d0250"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/SKILL.md",
+      "bytes": 4604,
+      "sha256": "fe224eaeea63168f3c45e8cbbcb4c5d9dd7b2a1c84a2a34d36f93ea3b0bae719"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/api/detail.js",
+      "bytes": 1223,
+      "sha256": "9047f22c61a2cc081e7df642ef95b92eda12c5d0509d673171a9190219411ed6"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/api/post.js",
+      "bytes": 756,
+      "sha256": "0be42cd401a1c51593e26ce9ff8195ba42430e28e65b7990c9f8fe1e9c5c53f4"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/api/search.js",
+      "bytes": 1454,
+      "sha256": "da1ea873d728b4fab6f2093a63d345570790f041f6b5bde3c6059850e678e0e4"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/config/constants.js",
+      "bytes": 183,
+      "sha256": "0219028881e5065701d10762f1ceb968835f18bd516e431f60a03f51686e2fe3"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/platforms/agentReach.js",
+      "bytes": 9878,
+      "sha256": "e4b3b517eda5aa50387e9712b1b2cb6270dca5c2434d1e3a00b2d77e5f78a08a"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/platforms/guaikei.js",
+      "bytes": 2169,
+      "sha256": "35a7699f4a18a1113cda10d2ff9193acd755045b2151b345c6577dcbe109f696"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/utils/args.js",
+      "bytes": 601,
+      "sha256": "a23c91e67837fb9b4946290c4cc69e8ee7bdecb96f0ea43906b222f577604a8e"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/utils/log.js",
+      "bytes": 682,
+      "sha256": "d3dddbf208a78d94c91af0ae24d12ac6fe9015430159ef28713f18b5171eec5c"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/utils/request.js",
+      "bytes": 1888,
+      "sha256": "ad6f7a24f72ee52477944b3379aad9f19209ee3949cfc7ad2b89fc74f88375d2"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/utils/retry.js",
+      "bytes": 622,
+      "sha256": "c10bcc20ed3856f9c8917f6c093113cae46edaaf9f3b6c7c3f8f4afc7b4d3802"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/utils/utils.js",
+      "bytes": 1133,
+      "sha256": "78cde88ef93323dfbb12338a5d7677a7adea3030373419c8ef7cc766300d0b45"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/validate/keyword.js",
+      "bytes": 3722,
+      "sha256": "3c23055243c611d62082d76056c7303721da0704247a82cae0c55fb2b4e43e7f"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/validate/url.js",
+      "bytes": 1004,
+      "sha256": "32c121162136ada0d422b5a7c8631ff14ad85deec43feca5348a16fa02192e34"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/xiaohongshu/detail-cli.js",
+      "bytes": 2991,
+      "sha256": "03821216b8e0869f6fd23ae18bf93a1d9ac9fb372cb9ef01c8cc2beb8a0abc2c"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/xiaohongshu/post-cli.js",
+      "bytes": 3021,
+      "sha256": "f39ddda3343083d88e9ab5d6b6eb08587f134769fcfb4590fed01da577f1c900"
+    },
+    {
+      "path": "gzh-Skills/global-content-search/src/xiaohongshu/search-cli.js",
+      "bytes": 3584,
+      "sha256": "bbe6544071e062d76e4a63635470e3120c0447e55b79b31a15d4143a0c175aff"
+    },
+    {
+      "path": "gzh-Skills/gzh-explosive-content-detector/_skillhub_meta.json",
+      "bytes": 165,
+      "sha256": "b124e814cff78fb806167e5f1de63e7e57f372df62c8b49c6e577b093aa2e628"
+    },
+    {
+      "path": "gzh-Skills/gzh-explosive-content-detector/references/gzh_explosive_content_workflow.md",
+      "bytes": 16242,
+      "sha256": "0e4bc39f9a3b1166ffdb6ec211e4635522c295d2f3f4a2f17510fea55b77e8dd"
+    },
+    {
+      "path": "gzh-Skills/gzh-explosive-content-detector/references/gzh_trend_data_format.md",
+      "bytes": 7426,
+      "sha256": "2ce375e6b855ae7a7db7060dc4940a2f6a9e014e4a17b9c0a9828542f3b3e244"
+    },
+    {
+      "path": "gzh-Skills/gzh-explosive-content-detector/scripts/fetch_gzh_trends.py",
+      "bytes": 28558,
+      "sha256": "2ee82fda0d1b1072d3530c9af8b9491928152467148f4a406a17b6ded0a14a9e"
+    },
+    {
+      "path": "gzh-Skills/gzh-explosive-content-detector/SKILL.md",
+      "bytes": 7244,
+      "sha256": "cb6fcb89f7ac84d501c29f44196c37f5c4ff5f820e781e3d67e3a5182f2fd9e0"
+    },
+    {
+      "path": "gzh-Skills/gzh-longform-writer/references/method-templates.md",
+      "bytes": 5800,
+      "sha256": "980b8bd25f3e8de3b1fc1b6a6cfd6adc4847e0f54163bb9193f28ff6cda434b8"
+    },
+    {
+      "path": "gzh-Skills/gzh-longform-writer/SKILL.md",
+      "bytes": 10213,
+      "sha256": "85fabd0bc8c7c9f88bc3ad5c6dcc6a963803ca31d643080a911f38ac504c65a3"
+    },
+    {
+      "path": "gzh-Skills/gzh-positioning/references/menu-blueprints.md",
+      "bytes": 5168,
+      "sha256": "ae2d19551f74d644ecaa360828e2874daa4bf932415e49b92d41c989bad5ab88"
+    },
+    {
+      "path": "gzh-Skills/gzh-positioning/SKILL.md",
+      "bytes": 13031,
+      "sha256": "05e274b34bcb586d2e583122d13daa5af54934918793c97f125adc8af0202627"
+    },
+    {
+      "path": "gzh-Skills/gzh-short-post/SKILL.md",
+      "bytes": 10680,
+      "sha256": "2615778ad117584de0577f6b7e85ad61bb88bda8e48c0a32169ac1132af2bf3a"
+    },
+    {
+      "path": "gzh-Skills/README.md",
+      "bytes": 3584,
+      "sha256": "b96b86bdd3fd09746559eb28c3687eea535553a2088e64875cc1fad0ce538103"
+    },
+    {
+      "path": "gzh-Skills/references/my-voice.md",
+      "bytes": 5803,
+      "sha256": "96981afbc03165855c58c3f8e2f2412fd27e85c9042aad1168885ebaf00ade92"
+    },
+    {
+      "path": "gzh-Skills/space-chart-image/.labnana.env.example",
+      "bytes": 275,
+      "sha256": "5e8907c09f8f8d21871a14ad5e1e4f215e313f7d1f8039c3c32d0cb59452dd2d"
+    },
+    {
+      "path": "gzh-Skills/space-chart-image/agents/chart.yaml",
+      "bytes": 186,
+      "sha256": "b6b24c8a6499df4d003569855bae31f7acacf5226aac9de8a97e4b61b4407e4f"
+    },
+    {
+      "path": "gzh-Skills/space-chart-image/references/chart-prompts.md",
+      "bytes": 13565,
+      "sha256": "7216a8bc66961d50e7f82a77fdbf3640b1e42c40e9340e0a7c325ed2985f48f8"
+    },
+    {
+      "path": "gzh-Skills/space-chart-image/scripts/generate_chart.py",
+      "bytes": 12155,
+      "sha256": "3df16a24ccc3613c14f83939042704e8cb15a92983d57c7b0862064a9d56eb17"
+    },
+    {
+      "path": "gzh-Skills/space-chart-image/SKILL.md",
+      "bytes": 13443,
+      "sha256": "0db3e4b348a9c0f1c7f870960cf4442d37d1f9ba61e0050e40eda15ae1745870"
+    },
+    {
+      "path": "gzh-Skills/space-gzh-cover/references/cover-layouts.md",
+      "bytes": 4956,
+      "sha256": "bece9ebfffae3ce01dd6f9425c53154c02ed44569fc791d73b6d68635bcd3d96"
+    },
+    {
+      "path": "gzh-Skills/space-gzh-cover/references/prompt-recipes.md",
+      "bytes": 5707,
+      "sha256": "6d4dab511fd6fc02d8194819a963e9f78e4850f05599a158e4af29a4731ca21d"
+    },
+    {
+      "path": "gzh-Skills/space-gzh-cover/scripts/check_cover.py",
+      "bytes": 4847,
+      "sha256": "f517f9c8c1746044a1f021f573a7527d2d815c5f551a76be4abdcb1e3d1343a9"
+    },
+    {
+      "path": "gzh-Skills/space-gzh-cover/SKILL.md",
+      "bytes": 11095,
+      "sha256": "4cbe4153cd80e78460d31125f2470bd154bf1164f8a0c97e2ab3a69d9abb9320"
+    },
+    {
+      "path": "gzh-Skills/space-text-logic-diagram/assets/template.html",
+      "bytes": 22315,
+      "sha256": "8184ab2ad991680475da05048da03b947fb5de58f49ec4dc8ee903c589e93fd8"
+    },
+    {
+      "path": "gzh-Skills/space-text-logic-diagram/SKILL.md",
+      "bytes": 8097,
+      "sha256": "30730e51f4da6b863b1981c2acaf758fb77da104bf29963ae94bf09785abb719"
+    },
+    {
+      "path": "gzh-Skills/space-wechat-layout/agents/openai.yaml",
+      "bytes": 323,
+      "sha256": "4f1b262b3391ab4718317ca10283b2741d4d9bec992fc85d42b6abe3d385a174"
+    },
+    {
+      "path": "gzh-Skills/space-wechat-layout/assets/static-preview-template.html",
+      "bytes": 3958,
+      "sha256": "48a9059c816e04de3aa6ee386fd52f42dea7896981ac45eab6e4ed10114d8a03"
+    },
+    {
+      "path": "gzh-Skills/space-wechat-layout/references/style-guide.md",
+      "bytes": 2979,
+      "sha256": "0458edc89ad224e95c885257bffbae6caa7ddc875131bb6d9f775617d1ed04da"
+    },
+    {
+      "path": "gzh-Skills/space-wechat-layout/SKILL.md",
+      "bytes": 5663,
+      "sha256": "90699d9d939b675bf3fc3b5168f58b0179460227042ab6241c97b4e9a50fa891"
+    },
+    {
+      "path": "gzh-Skills/xhs-hotnotes/_meta.json",
+      "bytes": 105,
+      "sha256": "4ad13fb1f3e42acd1919cde0fc27edc838ce8ac3e859903bcf51029c5e0f4de1"
+    },
+    {
+      "path": "gzh-Skills/xhs-hotnotes/README.en.md",
+      "bytes": 8444,
+      "sha256": "f6cf3d0381a58f7f09e833f7ee707c5032b8da26b01e15575899c80c702d8820"
+    },
+    {
+      "path": "gzh-Skills/xhs-hotnotes/README.md",
+      "bytes": 6834,
+      "sha256": "e49b10d57fee9b93de4bebf652ef62489aaf168dc504f5b342fd61443a22f30b"
+    },
+    {
+      "path": "gzh-Skills/xhs-hotnotes/references/xhs_hot_article_format.md",
+      "bytes": 4601,
+      "sha256": "4d0265f6c58476e9591c336c04a507c8babfec4ddee109115b4743f4892ee392"
+    },
+    {
+      "path": "gzh-Skills/xhs-hotnotes/scripts/fetch_xhs_hot_articles.py",
+      "bytes": 23298,
+      "sha256": "7f8bde2153fbb4abde221c8ae3da96566d7cb9c66bce352601e47cb1d8358d66"
+    },
+    {
+      "path": "gzh-Skills/xhs-hotnotes/SKILL.md",
+      "bytes": 28381,
+      "sha256": "f22a92be6793952c6bfc38632b8cecbff000521736a36c2e033d07f697f02f11"
+    },
+    {
+      "path": "README.md",
+      "bytes": 12210,
+      "sha256": "e7d05fc65e34b37689c39dd35674678fe3f3cbb549a1553618206e4ea3c034a7"
+    },
+    {
+      "path": "SKILL.md",
+      "bytes": 7323,
+      "sha256": "1880b5176d5c99c72e458adc972d77209ad3e39e54c1cd5254305092d476bade"
+    },
+    {
+      "path": "video-Skills/README.md",
+      "bytes": 3880,
+      "sha256": "48da61e08d55977fd5ea26cdc7bc3f3fbe647519983194f6c6d3d4120436287f"
+    },
+    {
+      "path": "video-Skills/space-video-audio/references/mixing-recipes.md",
+      "bytes": 1741,
+      "sha256": "2746dcfbf0392e0a5aa1ff976cdd5090877ed552c8441ce6158fbe762e276c6a"
+    },
+    {
+      "path": "video-Skills/space-video-audio/references/music-sources.md",
+      "bytes": 2114,
+      "sha256": "6d6cc3f05129475cf783d82648153c668c8cdd0a7f848d7073e5d75786ff6735"
+    },
+    {
+      "path": "video-Skills/space-video-audio/scripts/mix.sh",
+      "bytes": 2715,
+      "sha256": "0ecc904782fbd77661453091845ffa5208c9860dfd7f25487cc747760c4d1447"
+    },
+    {
+      "path": "video-Skills/space-video-audio/SKILL.md",
+      "bytes": 4300,
+      "sha256": "d2863c3acf38afbbc68711186bd2226e8920cacf3a4e82260d5ed52f35227bbd"
+    },
+    {
+      "path": "video-Skills/space-video-broll-sketch/scripts/concat.sh",
+      "bytes": 740,
+      "sha256": "e1b7dd2551f8619a7fc5770ee8ed2353fad90fc6138fae2284aab08eeefea4b8"
+    },
+    {
+      "path": "video-Skills/space-video-broll-sketch/scripts/libtv_i2v.sh",
+      "bytes": 2107,
+      "sha256": "c0472cd2425ce462160b59bfd4035d47b0cd6611d6a6d6d88cab031d0bb795a5"
+    },
+    {
+      "path": "video-Skills/space-video-broll-sketch/scripts/seedance.py",
+      "bytes": 4315,
+      "sha256": "69b6c06261188fa3d0d4392ffd9b8e149925fdd7c822420310e19c5224391875"
+    },
+    {
+      "path": "video-Skills/space-video-broll-sketch/SKILL.md",
+      "bytes": 8543,
+      "sha256": "36ff4a21f04a1b217aabaee2e29b56c382760f80bdfa264e36555595fdbffe77"
+    },
+    {
+      "path": "video-Skills/space-video-broll/references/design-styles.md",
+      "bytes": 3354,
+      "sha256": "527d11b33059739b85255e3df7c42bda0331eaa732aebf2def7868778d3b51e6"
+    },
+    {
+      "path": "video-Skills/space-video-broll/references/replica-and-qc.md",
+      "bytes": 2131,
+      "sha256": "9530c1c90ddec90bd7ee4aa9b0e99ef2478164997509f6b31818e8872371d784"
+    },
+    {
+      "path": "video-Skills/space-video-broll/scripts/example-composition.html",
+      "bytes": 12631,
+      "sha256": "962a4954682322439ba7bb63fdf7f644493f7ec9166e238f2c804750829fefbb"
+    },
+    {
+      "path": "video-Skills/space-video-broll/scripts/render.mjs",
+      "bytes": 2597,
+      "sha256": "aee166b7af399943298818ad37895ea4f91297c4efbe7e22ff9a2f10dfa35cf0"
+    },
+    {
+      "path": "video-Skills/space-video-broll/scripts/timeline.js",
+      "bytes": 1838,
+      "sha256": "7a5b8d7144df7268e20bc1d7c2845e3233c61b9c0ae93cbc2df0b3c9d362ce02"
+    },
+    {
+      "path": "video-Skills/space-video-broll/SKILL.md",
+      "bytes": 5156,
+      "sha256": "616643ed16923e28a0c40648d24c218b2b2a70adffb15ce4aaa062ab2e4c0ca4"
+    },
+    {
+      "path": "video-Skills/space-video-cover/SKILL.md",
+      "bytes": 2936,
+      "sha256": "5869e8bb017d8861a309ef63852a1633a118888decdbf8e150710e3754827a04"
+    },
+    {
+      "path": "video-Skills/space-video-edit/references/删前保后.md",
+      "bytes": 1480,
+      "sha256": "b7ee17c189e9c6210a83f6664e0d2a31d8fb58724adb9e8c0836343c45c5ce39"
+    },
+    {
+      "path": "video-Skills/space-video-edit/references/删除检测规则.md",
+      "bytes": 1827,
+      "sha256": "6c6e94cdac59dd5c7736ac05e6ffdd79f6f69a4d735ce3c107f4f2e20b6a6e04"
+    },
+    {
+      "path": "video-Skills/space-video-edit/references/删除风险分层.md",
+      "bytes": 1925,
+      "sha256": "33d1668226a41bc619c261df1caa83c1b4a9f19fcd24ccd6890bb129fddad9cb"
+    },
+    {
+      "path": "video-Skills/space-video-edit/scripts/cut_by_ranges.sh",
+      "bytes": 1394,
+      "sha256": "e0127cdbcb1cdc29f252cc9097db5b835536b644de51f727cc11cad76a6d2421"
+    },
+    {
+      "path": "video-Skills/space-video-edit/SKILL.md",
+      "bytes": 3781,
+      "sha256": "84d894cb9751be0b16156de6315fc6588f6a009888398b8e9e9da6a2155a3800"
+    },
+    {
+      "path": "video-Skills/space-video-script/SKILL.md",
+      "bytes": 3718,
+      "sha256": "d85d098220aacf446298b7f37d5d6ba1b841be678e38d8b7c1ef6d7f0f94d5fc"
+    },
+    {
+      "path": "video-Skills/space-video-subtitle/SKILL.md",
+      "bytes": 2654,
+      "sha256": "8767b8c2f34ef02f3552ef8a0c72e67060939df92771ea60820676d6bfe0fafe"
+    },
+    {
+      "path": "video-Skills/space-video-topic/SKILL.md",
+      "bytes": 4364,
+      "sha256": "1c8bbe21854e5f23d5f2d42f275f3278e65e7733a51f930df055c290cff7472a"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/agents/openai.yaml",
+      "bytes": 280,
+      "sha256": "51ad8f68919337d46714a0942c6b9219cd634a5e07697de38d581087aef008ce"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/references/platforms.md",
+      "bytes": 1351,
+      "sha256": "7ec1d647b35b8a52e7ba37ac5f1485bacc2305d1e9bb47f3fd64d4fcb4e7f469"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/scripts/asr.py",
+      "bytes": 6122,
+      "sha256": "e427dec16dfbd18e7c62a7770564376c730e13f9721fefc95f826bd916bf5d6e"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/scripts/formats.py",
+      "bytes": 3577,
+      "sha256": "1b40a7da0813a66ed884e1fa7990b277e03c45fc0293175b07b1624b4d5f01c3"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/scripts/platforms.py",
+      "bytes": 9644,
+      "sha256": "31aaf2da35b5dd1c51d341649596e6f02f32da8dd19bae7dbb644ded1e839b77"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/scripts/run.sh",
+      "bytes": 246,
+      "sha256": "a94253a19d67b33471d94b161b99c9a39335040d1e430dde4b43740331e0c627"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/scripts/space_video_transcript.py",
+      "bytes": 7274,
+      "sha256": "4f80921858cc2a40a454b2db51db72e7a7c9df4c165271e4ae32967c6476c44a"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/SKILL.md",
+      "bytes": 3567,
+      "sha256": "c24d24cc42eabe55504b762bd2c5e5fca91e589379a992432673a67c09212dd5"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/tests/test_asr.py",
+      "bytes": 5071,
+      "sha256": "e2289f35939ed5651d959789ecf19846ad01a4183960fc2ee54b65d536dad909"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/tests/test_cli.py",
+      "bytes": 1456,
+      "sha256": "f19b28e93d41e5d47ba3b2a5838716fd2518838e54a5edd8732af1b06534c66a"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/tests/test_formats.py",
+      "bytes": 1511,
+      "sha256": "aef1c2839cb7774f4215fe039dbf56fb5081fa923d299e7e27c12427d0ec43bf"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/tests/test_platforms.py",
+      "bytes": 5702,
+      "sha256": "8064ffdd145b8ca38011a66bfe3f956501ea580b037f003144436f1052549d59"
+    },
+    {
+      "path": "video-Skills/space-video-transcript/tests/test_workflow.py",
+      "bytes": 4853,
+      "sha256": "64d841d882f4366692b696f1d5d9ab4de1f2c9e3eaeb99c1a9c813a1f4ebda78"
+    },
+    {
+      "path": "video-Skills/space-video/README.md",
+      "bytes": 3623,
+      "sha256": "c011c0e6cd52e28b506f35ee7ba8dac597b855c6a1c3905db2af57b525da763e"
+    },
+    {
+      "path": "video-Skills/space-video/SKILL.md",
+      "bytes": 4033,
+      "sha256": "11a8af00ea69fe231276f814479689a6d92218c13653d68a43a98296cb8e35fe"
+    },
+    {
+      "path": "xhs-Skills/README.md",
+      "bytes": 6267,
+      "sha256": "26b331179e3b631808fad7888eca21851afeecf6e4a2ec4acd2bdcb1989ce5b1"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-account-audit/SKILL.md",
+      "bytes": 25920,
+      "sha256": "13cdd45e0768cecb31a6d122d04fd0e21689b78580e3fde77b53aa5f4683fe2b"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-buddy/SKILL.md",
+      "bytes": 8081,
+      "sha256": "b627e05345e9ccbc9383acdd380161ce8c0fb24c7edb8bfc70a62cb18b5c7e5b"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-cover/agents/openai.yaml",
+      "bytes": 270,
+      "sha256": "af44db5564d2354d9b5dab5e3c1f232324fbe3258cc54be18687c93ac486521f"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-cover/evals/evals.json",
+      "bytes": 1898,
+      "sha256": "18042220cb2fc1502df339c35f5a20e92bc5c89014a33bd2480d51271b09696f"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-cover/references/cover-styles.md",
+      "bytes": 5338,
+      "sha256": "49a44d763ccd3086037c0a87340bc1f96f0339a5a2f5fac83eefafec407e1a98"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-cover/references/prompt-recipes.md",
+      "bytes": 4304,
+      "sha256": "28bbe9cde7f48296e76e0eba9a18237cc1e3970a4968ef1fc02a1f80075f3434"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-cover/scripts/check_cover.py",
+      "bytes": 2958,
+      "sha256": "bbbd39e553976f8ddab91bf25798331801af9158716c55d3ffe58189936a7e0e"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-cover/SKILL.md",
+      "bytes": 8196,
+      "sha256": "955a5ad59aee5a25f73acdc83697ccc13e8a256e04b32fc472c924a6d0de088a"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-hotspot/references/data_sources.md",
+      "bytes": 9242,
+      "sha256": "2049e9c0bbdf68a8fcdd68b587f8ea8c6eda40596b94e562e2a6b72c80abeb75"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-hotspot/references/pattern_extraction.md",
+      "bytes": 5307,
+      "sha256": "3d7175705158560d5083f3bb6d9f0270b1bc1cc25c05396852987fb7f4a6a1fb"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-hotspot/references/xhs_hot_article_format.md",
+      "bytes": 4601,
+      "sha256": "4d0265f6c58476e9591c336c04a507c8babfec4ddee109115b4743f4892ee392"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-hotspot/references/xhs_sectors.json",
+      "bytes": 7937,
+      "sha256": "bdc9ddf61330ce4f3e6b7ae53784b2a62ef65993de1606ad2887fbaee350b889"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-hotspot/scripts/compare_sets.py",
+      "bytes": 14432,
+      "sha256": "dbb66a53f8f30a6f6c089a1a7338e59f378ee172bfde0b8696d358bf35fd3d25"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-hotspot/scripts/fetch_xhs_hot_articles.py",
+      "bytes": 23298,
+      "sha256": "7f8bde2153fbb4abde221c8ae3da96566d7cb9c66bce352601e47cb1d8358d66"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-hotspot/SKILL.md",
+      "bytes": 21403,
+      "sha256": "7a8a1f2d8fd4de94d68bdce252b408d9af4a3f2f500d68088222aa65592e7456"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-image/agents/openai.yaml",
+      "bytes": 243,
+      "sha256": "21c66ca8988b225a3d08e841d5f6bdb5d9a0cffd7a0346ee7b11ee341c70aca0"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-image/evals/evals.json",
+      "bytes": 2877,
+      "sha256": "958572d77deb2ab07d6fa4cc139c39ae4e9d7f8b70e8d24152c0068aad19f2bb"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-image/references/page-patterns.md",
+      "bytes": 5560,
+      "sha256": "fb348687328735aa44b4829a3ca1bbaadaefab5a247f28986f7c14ca5318aa4a"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-image/references/visual-system.md",
+      "bytes": 6190,
+      "sha256": "9a893d5e3a58f7f8089ffb60f10bb126484abfb709e69d7a489ac51b7ee6d673"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-image/scripts/check_image.py",
+      "bytes": 3563,
+      "sha256": "9f224279f04ffc77d51c19d5bf35e4cd5a3a122b72b2507a55449698869309f4"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-image/SKILL.md",
+      "bytes": 11638,
+      "sha256": "f46b0201c37a11d70c4d308b642a93d2b8aa7fe3ccee0dbad0aaca2d7562847f"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-note-analytics/scripts/xhs_notes.py",
+      "bytes": 12430,
+      "sha256": "d896258adb0f68e8ec0e130194bf096c848376d98f6e12282bbfe2619335f80f"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-note-analytics/SKILL.md",
+      "bytes": 21963,
+      "sha256": "25ead525c19d20ed36567be4bd6555f9b616030e77c711b8004d7801f76aa307"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-positioning/SKILL.md",
+      "bytes": 29620,
+      "sha256": "1fab2f19f0a88d7c0f8243d79332546b724938d0c1259a6059d8c18f57ea3635"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-title/SKILL.md",
+      "bytes": 23763,
+      "sha256": "00afb1f706f0b6648bd2e1e3586e488affda1ddddb2b1d55a55758db9b08e737"
+    },
+    {
+      "path": "xhs-Skills/space-xhs-writer/SKILL.md",
+      "bytes": 33974,
+      "sha256": "93827909b1af8a0434423aab6b55702bfb40035d5c3a4d9af3654c9107ce2fa7"
+    },
+    {
+      "path": "xhs-Skills/xhs-html/agents/openai.yaml",
+      "bytes": 241,
+      "sha256": "c3e7e9edf54b01661d8a3b052ce327ec472526a9ef929c6255c02f4672b67f7f"
+    },
+    {
+      "path": "xhs-Skills/xhs-html/assets/xhs-template.html",
+      "bytes": 9965,
+      "sha256": "a07fe97da182cc1c1fe86cd35c2d893d8d7cb65d965876ed27f02a4ad8201a89"
+    },
+    {
+      "path": "xhs-Skills/xhs-html/evals/evals.json",
+      "bytes": 1412,
+      "sha256": "c94d5eda63a53c3cf89de242001b568c728e0bc07472b27da1ffcde597cc6715"
+    },
+    {
+      "path": "xhs-Skills/xhs-html/references/page-patterns.md",
+      "bytes": 3543,
+      "sha256": "375bf11ca072d45b833d74a26d903cdab8879172c8aeb90627962846712b58e4"
+    },
+    {
+      "path": "xhs-Skills/xhs-html/references/style-presets.md",
+      "bytes": 6070,
+      "sha256": "0ea4acea3cd4a84702017ce188fa824a7f93d58c0d478e8496c6b1123a43d6a3"
+    },
+    {
+      "path": "xhs-Skills/xhs-html/references/style-registry.md",
+      "bytes": 4938,
+      "sha256": "6d70431bd80c119a4239820188d4ca73373b73178a4917cec965de89a0c7ebc5"
+    },
+    {
+      "path": "xhs-Skills/xhs-html/references/xhs-html-guide.md",
+      "bytes": 4263,
+      "sha256": "c8649bad89fdcee2087f1bd70ce50bb7b4264d1f1b43d63e01e1d1ecdd004b58"
+    },
+    {
+      "path": "xhs-Skills/xhs-html/scripts/check_contrast.py",
+      "bytes": 3539,
+      "sha256": "af98e4637b52dd747e8d17ed62ac17df98c31b58a6099566a3664d106c7d8ad2"
+    },
+    {
+      "path": "xhs-Skills/xhs-html/scripts/render_xhs.mjs",
+      "bytes": 6781,
+      "sha256": "fce9e873d16df80627cffedaeebe94bfc693e2fca748659c48e0631765aa06cd"
+    },
+    {
+      "path": "xhs-Skills/xhs-html/SKILL.md",
+      "bytes": 8210,
+      "sha256": "9a9a3c57ef6bdcd60214336bec89cfc3ffcc68c234fa2136faf92122380a8390"
+    }
+  ]
+}
